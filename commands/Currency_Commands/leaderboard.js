@@ -5,5 +5,6 @@ module.exports = {
     execute(message, args) {
         // Logic for showing the currency leaderboard
         message.channel.send('Displaying the currency leaderboard...');
+        
     },
 };

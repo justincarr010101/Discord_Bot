@@ -8,7 +8,15 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildVoiceStates] });
 
-const db = require('./db');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./discordDB', (err) => {
+    if (err) {
+        console.error('Error opening database:', err.message);
+    } else {
+        console.log('Connected to the database.');
+    }
+});
+        
 client.commands = new Collection();
 
 // Function to recursively read command files from a directory
@@ -21,13 +29,9 @@ const loadCommands = (dir) => {
     }
 };
 
-// Load currency commands
+// Load commands from diferent folders
 loadCommands('./commands/currency_Commands');
-
-// Load music commands
 loadCommands('./commands/music_Commands');
-
-// Load random commands
 loadCommands('./commands/random_Commands');
 
 // Event listener for message creation
@@ -50,8 +54,28 @@ client.on('messageCreate', message => {
 });
 
 
+// Event listener for when a new member joins the server
+client.on('guildMemberAdd', member => {
+
+    // Connect to the SQLite database
+    const sqlite3 = require('sqlite3').verbose();
+    const db = new sqlite3.Database('path/to/your/database.db');
+
+    // Your code to handle the event goes here
+    member.send('Welcome to the server! Stay at ur own risk.');
+
+    // Insert the new member's information into the database
+    db.run('INSERT INTO members (UserID, balance) VALUES (?, ?)', [member.user.username, 0], function(err) {
+        message.send(member.user.username);
+    });
+
+    // Close the database connection
+    db.close();
+
+});
+
+//connection code
 const TOKEN = process.env.TOKEN;
-debugger;
 
 // Log that the bot is starting up
 console.log('Logging in...');

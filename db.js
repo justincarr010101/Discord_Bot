@@ -12,6 +12,8 @@ db.serialize(() => {
     )`);
 });
 
+
+
 // Function to get user balance from the database
 function getBalance(userId) {
     return new Promise((resolve, reject) => {
