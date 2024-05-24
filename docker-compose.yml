@@ -1,0 +1,13 @@
+services:
+  app:
+    container_name: Lads-Discord-bot
+    build:
+      context: .
+      dockerfile: .Dockerfile
+    volumes:
+          - .:/usr/src/app
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    command: node index.js
