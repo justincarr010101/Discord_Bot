@@ -1,5 +1,4 @@
 // queue.js
-
 module.exports = {
     name: 'queue',
     description: 'Add song to Queue',

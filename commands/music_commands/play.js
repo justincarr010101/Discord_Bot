@@ -6,7 +6,8 @@ async function execute(message, args) {
     const player = useMainPlayer();
     const channel = message.member.voice.channel;
     if (!channel) return message.channel.send('You are not connected to a voice channel!'); // make sure we have a voice channel
-    const query = args[0]
+    args = args.toString();
+    const query = args
 
     // let's defer the interaction as things can take time to process
     const queue = player.nodes.create(message.guild);
@@ -20,7 +21,6 @@ async function execute(message, args) {
 
     // add track(s) (this will add playlist or single track from the result)
     queue.addTrack(result.tracks[0]);
-    message.channel.send(`**${result.tracks[0]}** enqueued!`);
 
     try {
         // if player node was not previously playing, play a song
