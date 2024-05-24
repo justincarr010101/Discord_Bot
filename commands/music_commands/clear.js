@@ -2,17 +2,16 @@ const { useQueue } = require("discord-player");
 
 // stop.js
 module.exports = {
-    name: 'stop',
-    description: 'Stop playback',
+    name: 'clear',
+    description: 'clear queue ',
     execute(message, args) {
         // Logic for stopping playback
-
         const queue = useQueue(message.guild.id);
         if(queue){
-            queue.delete();
-            message.channel.send('Stopping playback...');
+            queue.clear();
+            message.channel.send('Clearing queue...');
         }else{
-            message.channel.send('No Playback Found');
+            message.channel.send('No queue found');
         }        
     },
 };
