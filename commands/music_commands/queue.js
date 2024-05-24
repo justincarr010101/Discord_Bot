@@ -1,3 +1,5 @@
+
+
 const {useQueue} = require("discord-player");
 // queue.js
 module.exports = {
@@ -5,13 +7,15 @@ module.exports = {
     description: 'Add song to Queue',
     execute(message, args) {
         const queue = useQueue(message.guild.id);
+        let j=1;
         if(queue){
-            for (let i = 0; i < queue.tracks.data; i++){ 
-                console.log("data = " + queue.tracks.data[i].toString());
+            for (let i = 0; i < queue.tracks.data.length; i++){ 
+
                 const song = queue.tracks.data[i]["title"];
                 const artist = queue.tracks.data[i]["author"];
-                message.channel.send(song + "by" + artist);
+                message.channel.send("Queue position: " + j + " " + song + " " + artist);
                 console.log(song + artist);
+                j++;
             }
         }else{
             message.channel.send('No queue found');

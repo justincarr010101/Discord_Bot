@@ -67,7 +67,8 @@ module.exports = {
             queue = player.nodes.create(message.guild);
         }
 
-        for (let i = 0; i < 20; i++){ //billboardData.length
+
+        for (let i = 0; i < billboardData.length; i++){ //billboardData.length
             
             const song = billboardData[i]["song"];
             const artist = billboardData[i]["artist"];
