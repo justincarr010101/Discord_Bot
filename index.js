@@ -1,6 +1,9 @@
 require('dotenv').config();
 const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const db = require('./db.js');
+
+
 const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
@@ -23,6 +26,7 @@ player.extractors.loadDefault();
 //     // we will later define queue.metadata object while creating the queue
 
 // }
+
 
 
 // Function to recursively read command files from a directory
@@ -59,6 +63,29 @@ client.on('messageCreate', message => {
     }
 });
 
+
+client.on('guildMemberAdd', member => {
+
+    // Your code to handle the event goes here
+    member.send('Welcome to the server! Stay at ur own risk.');
+
+    // Insert the new member's information into the database
+    db.addMember(member.user.username, (err, result) => {
+        if (err) {
+            console.log('Error adding member to the database.');
+            return;
+        }
+        // Send message to a channel
+        const channel = client.channels.cache.find(ch => ch.name === 'welcome-and-rules');
+        if (channel) {
+            channel.send(`${result.username} has been added with an initial balance of ${result.balance}.`);
+        }
+    });  
+
+});
+
+
+
 //connection code
 const TOKEN = process.env.TOKEN;
 
@@ -70,3 +97,5 @@ client.login(TOKEN);
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
+
+

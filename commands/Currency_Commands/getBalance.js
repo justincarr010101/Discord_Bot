@@ -13,6 +13,7 @@ module.exports = {
             });
             message.channel.send(args[0] + " balance is: " + balance );
         }catch(e){
+            console.log(e);
             message.channel.send("Some error occured.");
         }
     },
