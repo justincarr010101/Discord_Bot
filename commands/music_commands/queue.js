@@ -1,5 +1,3 @@
-
-
 const {useQueue} = require("discord-player");
 // queue.js
 module.exports = {
@@ -9,7 +7,7 @@ module.exports = {
         const queue = useQueue(message.guild.id);
         let j=1;
         if(queue){
-            for (let i = 0; i < queue.tracks.data.length; i++){ 
+            for (let i = 0; i < 5; i++){ 
 
                 const song = queue.tracks.data[i]["title"];
                 const artist = queue.tracks.data[i]["author"];
