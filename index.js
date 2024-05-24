@@ -1,24 +1,29 @@
 require('dotenv').config();
 const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { log } = require('console');
 const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages, 
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildVoiceStates] });
-
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./discordDB', (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to the database.');
-    }
-});
-        
 client.commands = new Collection();
+
+//checking how the player is setup 
+const { Player } = require('discord-player');
+
+// this is the entrypoint for discord-player based application
+const player = new Player(client);
+
+// Now, lets load all the default extractors, except 'YouTubeExtractor'. You can remove the filter if you want to include youtube.
+player.extractors.loadDefault((ext) => ext !== 'YouTubeExtractor');
+
+// this event is emitted whenever discord-player starts to play a track
+// player.events.on('playerStart', (queue, track) => {
+//     // we will later define queue.metadata object while creating the queue
+
+// }
+
 
 // Function to recursively read command files from a directory
 const loadCommands = (dir) => {
@@ -41,9 +46,6 @@ client.on('messageCreate', message => {
 
     const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
     const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
-    console.log(args + " "+commandName + " message" +message);
-
-    
 
     if (!client.commands.has(commandName)) return; // Check commands collection for command said
 
@@ -55,27 +57,6 @@ client.on('messageCreate', message => {
         console.error(error);
         message.reply('there was an error executing that command.');
     }
-});
-
-
-// Event listener for when a new member joins the server
-client.on('guildMemberAdd', member => {
-
-    // Connect to the SQLite database
-    const sqlite3 = require('sqlite3').verbose();
-    const db = new sqlite3.Database('path/to/your/database.db');
-
-    // Your code to handle the event goes here
-    member.send('Welcome to the server! Stay at ur own risk.');
-
-    // Insert the new member's information into the database
-    db.run('INSERT INTO members (UserID, balance) VALUES (?, ?)', [member.user.username, 0], function(err) {
-        message.send(member.user.username);
-    });
-
-    // Close the database connection
-    db.close();
-
 });
 
 //connection code

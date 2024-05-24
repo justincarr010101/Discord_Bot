@@ -12,9 +12,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@discord-player/extractor": "^4.4.7",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "discord-player": "^6.6.8",
     "discord.js": "^14.15.2",
     "dotenv": "^16.4.5",
+    "ffmpeg-static": "^5.2.0",
+    "mediaplex": "^0.0.9",
     "sqlite3": "^5.1.7",
     "youtube-ext": "^1.1.25"
   }
