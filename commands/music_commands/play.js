@@ -1,58 +1,66 @@
+const { Client, Intents, GatewayIntentBits } = require('discord.js');
 const { Player } = require('discord-player');
+require('dotenv').config();
+
+
 
 module.exports = {
     name: 'play',
     description: 'Play a song in a voice channel',
-    async execute(message, args) {
-        const player = new Player(message.client);
 
-        const voiceChannel = message.member.voice.channel;
-        console.log('Voice Channel:', voiceChannel);
+    async execute(interaction, args) {
+        console.log("args are:" + args +"message is:" + interaction );
+        const client = new Client({
+            intents: [
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildMessages, 
+                GatewayIntentBits.MessageContent,
+                GatewayIntentBits.GuildVoiceStates] 
+        });
 
-        debugger;
-        
-        if (!voiceChannel) {
-            return message.channel.send('You need to be in a voice channel to play music!');
-        }
+        const player = new Player(client);
 
-        const permissions = voiceChannel.permissionsFor(message.client.user);
-        debugger;
+        // This ensures the client is logged in before attempting to handle commands
+        const TOKEN = process.env.TOKEN;
+        console.log('Logging in...');
+        if (!client.isReady()) await client.login(TOKEN);
 
-        if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-            return message.channel.send('I need the permissions to join and speak in your voice channel!');
-        }
+        const channel = interaction.member.voice.channel;
+        if (!channel) return interaction.reply('You are not connected to a voice channel!');
+
+
+        const query = interaction.options.getString(args, true); // get the song query from command
+
+        await interaction.deferReply();
 
         try {
-            console.log('Arguments for play command:', args.join(' '));
-            debugger;
-            const queue = player.createQueue(message.guild, {
+            const result = await player.search(query, {
+                requestedBy: interaction.user
+            });
+            if (result.tracks.length === 0) {
+                return interaction.followUp('No results found.');
+            }
+
+            const song = result.tracks[0];
+            const queue = player.createQueue(channel.guild, {
                 metadata: {
-                    channel: message.channel
+                    channel: interaction.channel
                 }
             });
 
-            await queue.connect(voiceChannel);
-
-            const searchResult = await player.search(args.join(' '), {
-                requestedBy: message.author
-            });
-
-            const track = searchResult.tracks[0];
-
-            if (!track) {
-                return message.channel.send(`Track **${args.join(' ')}** not found!`);
+            // Verify that the bot can connect to the voice channel
+            try {
+                if (!queue.connection) await queue.connect(channel);
+            } catch {
+                queue.destroy();
+                return interaction.followUp('Could not join your voice channel!');
             }
 
-            queue.addTrack(track);
-
-            if (!queue.playing) {
-                await queue.play();
-            }
-
-            message.channel.send(`Playing: **${track.title}**`);
-        } catch (error) {
-            console.error('Error playing song:', error);
-            message.channel.send('An error occurred while playing the song.');
+            queue.play(song);
+            return interaction.followUp(`Now playing **${song.title}**!`);
+        } catch (e) {
+            console.error(e);
+            return interaction.followUp(`Error: ${e.message}`);
         }
-    },
+    }
 };

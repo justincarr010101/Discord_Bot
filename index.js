@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { log } = require('console');
 const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
@@ -36,10 +37,13 @@ loadCommands('./commands/random_Commands');
 
 // Event listener for message creation
 client.on('messageCreate', message => {
-    if (!message.content.startsWith('!') || message.author.bot) return; // Check if the user is a bot
+    if (!message.content.startsWith('.') || message.author.bot) return; // Check if the user is a bot
 
-    const args = message.content.slice('!'.length).trim().split(/ +/); // Split command into its command
+    const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
     const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
+    console.log(args + " "+commandName + " message" +message);
+
+    
 
     if (!client.commands.has(commandName)) return; // Check commands collection for command said
 

@@ -3,13 +3,15 @@ module.exports = {
     name: 'richard',
     description: 'Mute Richard',
     execute(message, args) {
+        console.log("args are:" + args +"message is:" + message );
         // Check if the user has the appropriate permissions to mute
         if (!message.member.permissions.has('MANAGE_ROLES')) {
             return message.channel.send('You do not have permission to mute members.');
         }
-
+        
         // Get the user mentioned in the command
         const user = message.mentions.users.first();
+        console.log(user);
         if (!user) {
             return message.channel.send('You need to mention a user to mute them.');
         }
