@@ -1,8 +1,9 @@
 require('dotenv').config();
 const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const db = require('./db.js');
-
+const db2 = require('./db.js');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('discordDB');
 
 const client = new Client({
      intents: [

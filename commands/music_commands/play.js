@@ -34,10 +34,9 @@ async function execute(message, args) {
         // make sure you are releasing your entry, otherwise your bot won't
         // accept new play requests
         queue.tasksQueue.release();
-    }
-    
-    
+    }    
 }
+
 module.exports = {
     name: 'play',
     description: 'Play a song in a voice channel',

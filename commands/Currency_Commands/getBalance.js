@@ -1,3 +1,8 @@
+const sqlite3 = require('sqlite3').verbose();
+
+// Open a connection to the SQLite database file
+const db = new sqlite3.Database('discordDB');
+
 // getBalance.js
 module.exports = {
     name: 'balance',

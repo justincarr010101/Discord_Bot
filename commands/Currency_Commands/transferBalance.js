@@ -13,18 +13,12 @@ module.exports = {
                     resolve(row ? row.balance : 0);
                 }
             });
-            // get balance of receving user
+            
+            // check if they have the funds
             if(!(args[0] > balanceuser1)){
                 message.channel.send("Broke ahh bitch, you aint breaded like that.");
                 return;
             }
-            let balanceuser2 = db.get('SELECT balance FROM members WHERE Username = ?', [args[1]], (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row ? row.balance : 0);
-                }
-            });
 
             // update balance of sending user
             db.run('UPDATE members set balance = balance +?  WHERE Username = ?', [(args[0] * -1), message.author], (err) => {
@@ -34,6 +28,7 @@ module.exports = {
                     resolve();
                 }
             });
+            
             // update balance of receving user
             db.run('UPDATE members set balance = balance + ?  WHERE Username = ?', [args[0], args[1]], (err) => {
                 if (err) {
