@@ -21,13 +21,32 @@ const player = new Player(client);
 // Now, lets load all the default extractors, except 'YouTubeExtractor'. You can remove the filter if you want to include youtube.
 player.extractors.loadDefault();
 
-// this event is emitted whenever discord-player starts to play a track
-// player.events.on('playerStart', (queue, track) => {
-//     // we will later define queue.metadata object while creating the queue
+// Global error handling
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
 
-// }
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
+// WebSocket and network error handling
+client.on('sharderror', (error) => {
+    console.error('A WebSocket connection encountered an error:', error);
+});
 
+client.on('error', (error) => {
+    console.error('Client encountered an error:', error);
+});
+
+// Event listener for player errors
+player.events.on('playerError', (queue, error) => {
+    // Ensure queue.metadata is defined and has the channel object
+    if (queue.metadata && queue.metadata.channel) {
+        queue.metadata.channel.send('An error occurred while playing.');
+        console.error('Player Error:', error);
+    }
+});
 
 // Function to recursively read command files from a directory
 const loadCommands = (dir) => {
