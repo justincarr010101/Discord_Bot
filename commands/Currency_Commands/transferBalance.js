@@ -26,7 +26,7 @@ function getBalance(username){
 }
 
 
-function getBalance(username){
+function getBalance2(username){
     return new Promise((resolve, reject) => {
         db.get('SELECT balance FROM members WHERE Username = ?', username, (err, row) => {
             if (err) {

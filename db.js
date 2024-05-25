@@ -27,18 +27,12 @@ function getDB(){
     }
 }
 
-function addMember(username, callback) {
-    db.run('INSERT INTO members (Username, balance) VALUES (?, ?)', [username, 0], function(err) {
-        if (err) {
-            console.error('Error inserting new member:', err.message);
-            return callback(err);
-        }
-        console.log(`${username} has been added to the database.`);
-        callback(null, {username, balance: 0});
-    });
+function addMember(Username) {
+    db.run('INSERT INTO members (Username, balance) VALUES (?, ?)', [Username, 0]);
 }
 
 module.exports = {
     initDatabase,
-    getDB
+    getDB,
+    addMember
 };

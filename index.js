@@ -8,6 +8,8 @@ const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages, 
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildPresences,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildVoiceStates] });
 client.commands = new Collection();
@@ -84,22 +86,10 @@ client.on('messageCreate', message => {
 
 
 client.on('guildMemberAdd', member => {
-
+    console.log("guild member joined" + member.user.username );
     // Your code to handle the event goes here
-    member.send('Welcome to the server! Stay at ur own risk.');
 
-    // Insert the new member's information into the database
-    db2.addMember(member.user.username, (err, result) => {
-        if (err) {
-            console.log('Error adding member to the database.');
-            return;
-        }
-        // Send message to a channel
-        const channel = client.channels.cache.find(ch => ch.name === 'welcome-and-rules');
-        if (channel) {
-            channel.send(`${result.username} has been added with an initial balance of ${result.balance}.`);
-        }
-    });  
+    db2.addMember(member.user.username);  
 
 });
 
