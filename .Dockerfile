@@ -7,6 +7,8 @@ WORKDIR /usr/src/app
 # Copy the current directory contents into the container at /app
 COPY package*.json ./
 
+LABEL org.opencontainers.image.source https://github.com/justincarr010101/discord_bot
+
 # Install any needed packages specified in package.json
 RUN npm install
 
