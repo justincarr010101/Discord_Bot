@@ -2,8 +2,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const channel = "welcome-and-rules";
 
+
+let db;
+
 function initDatabase(){
-    const db = new sqlite3.Database('./discordDB', (err) => {
+    db = new sqlite3.Database('./discordDB', (err) => {
         if (err) {
             console.error('Error opening database:', err.message);
         } else {
@@ -12,6 +15,16 @@ function initDatabase(){
             return db;
         }
     });
+
+    return db;
+}
+
+function getDB(){
+    if(!db){
+        return initDatabase();
+    }else{
+        return db;
+    }
 }
 
 function addMember(username, callback) {
@@ -26,5 +39,6 @@ function addMember(username, callback) {
 }
 
 module.exports = {
-    initDatabase
+    initDatabase,
+    getDB
 };

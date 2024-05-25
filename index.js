@@ -2,8 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const db2 = require('./db.js');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('discordDB');
+const db = db2.getDB();
 
 const client = new Client({
      intents: [
@@ -90,7 +89,7 @@ client.on('guildMemberAdd', member => {
     member.send('Welcome to the server! Stay at ur own risk.');
 
     // Insert the new member's information into the database
-    db.addMember(member.user.username, (err, result) => {
+    db2.addMember(member.user.username, (err, result) => {
         if (err) {
             console.log('Error adding member to the database.');
             return;
