@@ -2,7 +2,7 @@
 const sqlite3 = require('sqlite3').verbose();
 
 const channel = "welcome-and-rules";
-export function initDatabase(){
+function initDatabase(){
     const db = new sqlite3.Database('./discordDB', (err) => {
         if (err) {
             console.error('Error opening database:', err.message);

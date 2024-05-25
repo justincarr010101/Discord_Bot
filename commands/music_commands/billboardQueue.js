@@ -56,7 +56,7 @@ module.exports = {
         //get nearest saturday to follow get100 criteria
         date = nearestSaturday(date);
         //get the billboard data from the week date
-        billboardData = get100(date);
+        billboardData = await get100(date);
 
         //set up queue and player
         const player = useMainPlayer();
