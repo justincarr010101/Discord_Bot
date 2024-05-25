@@ -88,7 +88,7 @@ module.exports = {
             await entry.getTask();
         
             // add track(s) (this will add playlist or single track from the result)
-            queue.addTrack(result.tracks[0]);
+            queue.addTrack(result.tracks[0]);   
 
             try {
                 // if player node was not previously playing, play a song
