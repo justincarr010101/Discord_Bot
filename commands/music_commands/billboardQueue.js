@@ -62,13 +62,10 @@ module.exports = {
         const player = useMainPlayer();
         const channel = message.member.voice.channel;
         if (!channel) return message.channel.send('You are not connected to a voice channel!'); // make sure we have a voice channel
-        queue = useQueue(message.guild.id);
+        queue = useQueue(message.guild);
 
         // let's defer the interaction as things can take time to process
-        if (queue){
-            //we already have que
-
-         } else {
+        if (!queue){
             //create queue if no queue
             queue = player.nodes.create(message.guild);
         }

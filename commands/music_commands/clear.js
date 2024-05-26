@@ -6,7 +6,7 @@ module.exports = {
     description: 'clear queue ',
     execute(message, args) {
         // Logic for stopping playback
-        const queue = useQueue(message.guild.id);
+        const queue = useQueue(message.guild);
         if(queue){
             queue.clear();
             message.channel.send('Clearing queue...');

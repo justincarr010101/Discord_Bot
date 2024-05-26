@@ -3,6 +3,7 @@ const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const db2 = require('./db.js');
 const db = db2.getDB();
+const http = require('http');
 
 const client = new Client({
      intents: [
@@ -61,8 +62,8 @@ const loadCommands = (dir) => {
 };
 
 // Load commands from diferent folders
-loadCommands('./commands/currency_Commands');
-loadCommands('./commands/music_Commands');
+loadCommands('./commands/Currency_Commands');
+loadCommands('./commands/music_commands');
 loadCommands('./commands/random_Commands');
 
 // Event listener for message creation
@@ -107,4 +108,12 @@ client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
+//for heroku to be happy
+const PORT = process.env.PORT || 3000;
 
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Hello from the Discord bot!\n');
+}).listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
