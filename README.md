@@ -2,7 +2,7 @@
 
 <h1 align="ceter"> Discord-bot WeebWatcher</h1>
 
-<h3 align="center"> This project was inspired by a desire to learn more JavaScript and in turn learn about Docker, and CI/CD. This bot currently implements features such as custom commands for playing music, creating a queue through Billboard's Top 100, player management, a database to keep track of in-guild currencies, and a few commands to mess with your friends. Still in production for more features.
+<h3 align="left"> This project was inspired by a desire to learn more JavaScript and in turn learn about Docker, and CI/CD. This bot currently implements features such as custom commands for playing music, creating a queue through Billboard's Top 100, player management, a database to keep track of in-guild currencies, and a few commands to mess with your friends. Still in production for more features.
 Learning Outcomes:
   - OOP practice using discord.js (a Node.js module that allows you to interact with the Discord API).
   - How to build and deploy using Docker, which involved creating Dockerfiles, managing Docker containers, and understanding container     
