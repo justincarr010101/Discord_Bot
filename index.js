@@ -48,7 +48,6 @@ client.on('sharderror', (error) => {
 });
 
 
-
 client.on('error', (error) => {
     console.error('Client encountered an error:', error);
 });
@@ -80,6 +79,7 @@ const loadCommands = (dir) => {
 loadCommands('./commands/Currency_Commands');
 loadCommands('./commands/music_commands');
 loadCommands('./commands/random_Commands');
+loadCommands('./commands/games');
 
 // Event listener for message creation
 client.on('messageCreate', message => {
@@ -93,6 +93,7 @@ client.on('messageCreate', message => {
     const command = client.commands.get(commandName);
 
     try {
+        debugger;
         command.execute(message, args);
     } catch (error) {
         console.error(error);
@@ -108,8 +109,6 @@ client.on('guildMemberAdd', member => {
     db2.addMember(member.user.username);  
 
 });
-
-
 
 //connection code
 const TOKEN = process.env.TOKEN;

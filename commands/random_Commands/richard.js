@@ -1,4 +1,7 @@
 // richard.js
+
+//NEED TO TAKE THE RICHARD, KICK THEM FROM PARTY AND ADD THEM BACK
+
 module.exports = {
     name: 'richard',
     description: 'Mute Richard',
@@ -24,6 +27,7 @@ module.exports = {
 
         // Get the mute role from the server
         const muteRole = message.guild.roles.cache.find(role => role.name === 'Muted');
+
         if (!muteRole) {
             return message.channel.send('Mute role not found.');
         }
@@ -37,6 +41,8 @@ module.exports = {
             // Add the mute role to the user
             member.roles.add(muteRole).then(() => {
                 message.channel.send(`Get silenced pussy, @${user.tag}`);
+                
+                
 
                 // Direct URL to a GIF
                 const gifUrl = 'https://tenor.com/kgw914CYY0G.gif';

@@ -1,4 +1,7 @@
 // Allow.js
+
+//NEED TO TAKE THE RICHARD, KICK THEM FROM PARTY AND ADD THEM BACK
+
 module.exports = {
     name: 'allow',
     description: 'Unmute Richard',

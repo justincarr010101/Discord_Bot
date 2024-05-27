@@ -2,17 +2,11 @@ const { Client, Intents, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const { useMainPlayer, useQueue } = require('discord-player');
 
-
-
-
-
-    const player = useMainPlayer();
+const player = useMainPlayer();
 
 async function execute(message, args) {
 
     const channel = message.member.voice.channel;
-
-   
 
     queue = useQueue(message.guild.id);
     if (!queue){
