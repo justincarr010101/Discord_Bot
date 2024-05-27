@@ -1,4 +1,6 @@
-![Header](https://github.com/justincarr010101/Discord_Bot/blob/main/Logo/Logo.jpg)
+<div align="center">
+  <img src="https://github.com/justincarr010101/Discord_Bot/blob/main/Logo/Logo.jpg" alt="Header" width="200" height="200">
+</div>
 
 <h1 align="ceter"> Discord-bot WeebWatcher</h1>
 
