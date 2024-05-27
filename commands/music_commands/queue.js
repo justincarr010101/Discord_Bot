@@ -4,7 +4,7 @@ module.exports = {
     name: 'queue',
     description: 'Add song to Queue',
     execute(message, args) {
-        const queue = useQueue(message.guild);
+        const queue = useQueue(message.guild.id);
         let j=1;
         if(queue){
             if(queue.getSize() > 0 ){

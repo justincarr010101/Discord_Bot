@@ -5,7 +5,7 @@ module.exports = {
     name: 'skip',
     description: 'Skip the current song',
     execute(message, args) {
-        const queue = useQueue(message.guild);
+        const queue = useQueue(message.guild.id);
         if(!queue){
             console.log("issue finding queue");
 

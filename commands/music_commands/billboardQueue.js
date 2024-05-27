@@ -62,12 +62,12 @@ module.exports = {
         const player = useMainPlayer();
         const channel = message.member.voice.channel;
         if (!channel) return message.channel.send('You are not connected to a voice channel!'); // make sure we have a voice channel
-        queue = useQueue(message.guild);
+        queue = useQueue(message.guild.id);
 
         // let's defer the interaction as things can take time to process
         if (!queue){
             //create queue if no queue
-            queue = player.nodes.create(message.guild);
+            queue = player.nodes.create(message.guild.id);
         }
 
 
@@ -90,7 +90,7 @@ module.exports = {
             try {
                 // if player node was not previously playing, play a song
                 if (!queue.connection) await queue.connect(channel);
-                if (!queue.isPlaying()) await queue.node.play();
+                if (!queue.isPlaying()) await queue.node.play()
             } catch (e) {
                 // let's return error if something failed
                 return message.channel.send(`Something went wrong: ${e}`);

@@ -19,7 +19,16 @@ client.commands = new Collection();
 const { Player } = require('discord-player');
 
 // this is the entrypoint for discord-player based application
-const player = new Player(client);
+const player = new Player(client, {
+    deafenOnJoin: true,
+    lagMonitor: 1000,
+    ytdlOptions: {
+        filter: "audioonly",
+        quality: "highestaudio",
+        highWaterMark: 1 << 25
+  }
+
+});
 
 // Now, lets load all the default extractors, except 'YouTubeExtractor'. You can remove the filter if you want to include youtube.
 player.extractors.loadDefault();
@@ -38,6 +47,8 @@ client.on('sharderror', (error) => {
     console.error('A WebSocket connection encountered an error:', error);
 });
 
+
+
 client.on('error', (error) => {
     console.error('Client encountered an error:', error);
 });
@@ -47,10 +58,14 @@ player.events.on('playerError', (queue, error) => {
     // Ensure queue.metadata is defined and has the channel object
     if (queue.metadata && queue.metadata.channel) {
         queue.metadata.channel.send('An error occurred while playing.');
-        console.error('Player Error:', error);
+        console.error('Player Error:', error.message);
     }
+    console.error('Player Error:', error.message);
 });
-
+player.events.on('playerStart', (queue, track) => {
+    // we will later define queue.metadata object while creating the queue
+    queue.channel.send(`Started playing **${track.cleanTitle}**!`);
+});
 // Function to recursively read command files from a directory
 const loadCommands = (dir) => {
     const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));

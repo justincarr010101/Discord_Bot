@@ -24,7 +24,7 @@ module.exports = {
         // Logic for stopping playback
         args = args[0];
         dynamic = args[1] || "";
-        const queue = useQueue(message.guild);
+        const queue = useQueue(message.guild.id);
 
         if(queue){
            
@@ -33,14 +33,14 @@ module.exports = {
                 message.channel.send("Dynamic Shuffling enabled");
             }else if (args === "off" || args === "false"){
                 shuffleState(queue, false);
-                message.channel.send("Shuffling enabled");
+                message.channel.send("Shuffling disabled");
             }
 
 
         }else{
             if (!queue){
                 //create queue if no queue
-                queue = player.nodes.create(message.guild);
+                queue = player.nodes.create(message.guild.id);
                 log("new queue created - shuffling")
             }
 
@@ -49,7 +49,7 @@ module.exports = {
                 message.channel.send("Dynamic Shuffling enabled");
             }else if (args === "off" || args === "false"){
                 shuffleState(queue, false);
-                message.channel.send("Shuffling enabled");
+                message.channel.send("Shuffling disabled");
             }
         }        
     },

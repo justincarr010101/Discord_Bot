@@ -5,7 +5,7 @@ module.exports = {
     description: 'Pause Songs',
     execute(message, args) {
         // Logic for stopping playback
-        const queue = useQueue(message.guild);
+        const queue = useQueue(message.guild.id);
         if(queue){
             queue.node.setPaused(!queue.node.isPaused());//isPaused() returns true if that player is already paused
             message.channel.send('Pause song...');

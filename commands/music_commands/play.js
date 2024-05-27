@@ -2,29 +2,39 @@ const { Client, Intents, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const { useMainPlayer, useQueue } = require('discord-player');
 
-async function execute(message, args) {
+
+
+
+
     const player = useMainPlayer();
+
+async function execute(message, args) {
+
     const channel = message.member.voice.channel;
-    if (!channel) return message.channel.send('You are not connected to a voice channel!'); // make sure we have a voice channel
 
+   
 
-    queue = useQueue(message.guild);
+    queue = useQueue(message.guild.id);
     if (!queue){
         //create queue if no queue
-        queue = player.nodes.create(message.guild); 
+        queue = player.nodes.create(message.guild.id); 
     }
     if(queue.node.isPaused()){
         queue.node.resume();
         return message.channel.send("Unpausing...");
     }
 
-
     args = args.toString();
     const query = args;
 
     if(query === "") return message.channel.send("gotta play a song idiot")
     console.log("user searched for: " + query);
-
+    if (!channel) return message.channel.send('You are not connected to a voice channel!'); // make sure we have a voice channel
+    // await player.play(channel, query, {
+    //     nodeOptions: {
+    //         metadata: message.channel
+    //     }
+    // });
     // added for similarity with billboardqueue incase a queue was init
     
 
