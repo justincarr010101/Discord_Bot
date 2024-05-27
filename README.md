@@ -1,4 +1,4 @@
-![Header](https://github.com/justincarr010101/justincarr010101/blob/main/content/github-header-image.png)
+![Header](https://github.com/justincarr010101/Discord_Bot/blob/main/Logo/Logo.jpg)
 
 <h1 align="ceter"> Discord-bot WeebWatcher</h1>
 
