@@ -3,22 +3,19 @@ const db = db2.getDB();
 
 function fetchAndPrintLeaderboard(message) {
     // Modify the SQL query to include the LIMIT clause
-    db.all('SELECT Username, balance FROM members ORDER BY balance DESC LIMIT 5', [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching data:', err.message);
-            message.channel.send("An error occurred while retrieving the leaderboard.");
-            return;
-        }
+    db2.query('SELECT Username, balance FROM members ORDER BY balance DESC LIMIT 5', [])
+    .then(rows => {
         if (rows.length > 0) {
             // Create a response string from the rows
             let response = 'Top 5 Leaderboard:\n';
             rows.forEach((row, index) => {
-                response += `${index + 1}. ${row.Username} - ${row.balance}\n`;  // Format: 1. Username - Balance
+                response += `${index + 1}. ${row.username} - ${row.balance}\n`;  // Format: 1. Username - Balance
             });
             message.channel.send(response);
-        } else {
-            message.channel.send("The leaderboard is currently empty.");
         }
+    })
+    .catch(err => {
+        message.channel.send("The leaderboard is currently empty.");
     });
 }
 

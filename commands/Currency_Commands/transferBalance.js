@@ -5,63 +5,39 @@ const db = db2.getDB();
 
 
 function getBalance(username){
-    db.get('SELECT balance FROM members WHERE Username = ?', username, (err, row) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if(row){
-                console.log(row)
-                console.log(username + "found");
-                console.log("Balance:", row.balance);
-                return row
-            }else{
-                console.log("party does not exist");
-                
-                //message.channel.send("You're not in the database idiot");
-            }
+    return new Promise((resolve, reject) => {
+    db2.query('SELECT balance FROM members WHERE Username = $1', [username])
+    .then(rows=> {
+        if (rows.length >=1){
+            console.log(rows[0]);
+            console.log(username + " found");
+            console.log("Balance:", rows[0].balance);
+            resolve(rows[0].balance);
+        }else{
+            console.log("party does not exist");
+            reject(new Error('Client is not defined'));
         }
+    }).catch(err => {
+        console.log("party does not exist");
+        reject(new Error('Client is not defined'));
     });
+    }) 
+
 }
-
-
-function getBalance2(username){
-    db.get('SELECT balance FROM members WHERE Username = ?', username, (err, row) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if(row){
-                console.log(username + "found");
-                console.log("Balance:", row.balance);
-                return row
-            }else{
-                console.log("party does not exist");
-                // db.run('INSERT INTO members (Username, balance) VALUES (?, ?)', [username, 0], function(err) {
-                //     if (err) {
-                //         return console.error(err.message);
-                //     }
-                //     console.log('Row inserted successfully!');
-                // });
-                
-                return null;
-            }
-        }
-    });
-}
-
 
 
 async function execute(message, args) {
     let balanceuser1;
     console.log(message.author.username);
     try{
-       
-        balanceuser1= getBalance(message.author.username);
-        balanceuser2= getBalance2(args[1]);
+        balanceuser1 = await getBalance(message.author.username);
+        balanceuser2 = await getBalance(args[1]);
+
         console.log("baluser2 is:" +balanceuser2);
+        
         if (balanceuser2 === null){
             message.channel.send("you cant send money to nobody retard.");
         }
-
         
         // check if they have the funds
         console.log(balanceuser1);
@@ -71,15 +47,29 @@ async function execute(message, args) {
         }
         try{
             // update balance of sending user
-            db.run('UPDATE members set balance = balance +?  WHERE Username = ?', [(args[0] *-1), message.author.username]);
+
+            db2.query('UPDATE members set balance = balance + $1 WHERE Username = $2', [(args[0] * -1), message.author.username])
+            .then(result => {
+                if (result) {
+                    return db2.query('UPDATE members set balance = balance + $1 WHERE Username = $2', [args[0], args[1]]);
+                } else {
+                    throw new Error('Error updating balance for the first user.');
+                }
+            })
+            .then(() => {
+                message.channel.send("Debts have been paid");
+            })
+            .catch(err => {
+                console.error(err);
+                message.channel.send("Error transferring money, check both users exist");
+            });
+
             
-            // update balance of receving user
-            db.run('UPDATE members set balance = balance + ?  WHERE Username = ?', [args[0], args[1]]);
-            message.channel.send("debts have been paid");
+
         } catch (e) {console.log(e);}
         
     }catch (e){
-        message.channel.send("you cant send money to nobody retard.");
+        message.channel.send("One of users does not exist");
     }
 }
 // transferBalance.js

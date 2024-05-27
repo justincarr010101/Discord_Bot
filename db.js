@@ -1,21 +1,45 @@
 // Import SQLite module
 const channel = "welcome-and-rules";
 const { Client } = require('pg');
-
+let client; 
 // Initialize PostgreSQL client
-const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false // This is important, especially in some deploy environments like Heroku
-    }
-});
-
+async function getDB(){
+    initDatabase();
+}
+function query(queryStr, args) {
+    return new Promise((resolve, reject) => {
+        if (client) {
+            return client.query(queryStr, args)
+                .then(res => resolve(res.rows))
+                .catch(err => {
+                    console.error('Error Querying DB', err.message);
+                    reject(err);
+                });
+        } else {
+            reject(new Error('Client is not defined'));
+        }
+    })
+    // if (client) {
+    //     return client.query(queryStr, args)
+    //         .then(res => res.rows)
+    //         .catch(err => {
+    //             console.error('Error Querying DB', err.message);
+    //             throw err; // Rethrow the error to be handled by the caller if needed
+    //         });
+    // } else {
+    //     return Promise.reject(new Error('Client is not defined'));
+    // }
+}
 async function initDatabase() {
-    try {
-        // Establish connection
+    if (!client){
+        client = new Client({
+            connectionString: process.env.DATABASE_URL,
+            ssl: false,
+        });
         await client.connect();
         console.log('Connected to the database.');
-
+    }
+    try {
         // Create table if it does not exist
         const createTableQuery = `
             CREATE TABLE IF NOT EXISTS members (
@@ -24,7 +48,7 @@ async function initDatabase() {
                 Balance INTEGER DEFAULT 0
             );
         `;
-        await client.query(createUtilWaryTableQuery);
+        await client.query(createTableQuery);
         console.log('Table is ready.');
 
     } catch (err) {
@@ -55,5 +79,6 @@ async function closeDatabase() {
 module.exports = {
     initDatabase,
     getDB,
-    addMember
+    addMember,
+    query
 };

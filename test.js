@@ -1,15 +1,15 @@
-const sqlite3 = require('sqlite3').verbose();
+const { Client } = require('pg');
 
 // Open a connection to the SQLite database file
-const db2 = new sqlite3.Database('discordDB');
+const db2 = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: false,
+});
+db2.connect();
+console.log('Connected to the database.');
 
 // Execute the INSERT query
-db2.run('INSERT INTO members (Username, balance) VALUES (?, ?)', ['depressedaccountant123', 0], function(err) {
-    if (err) {
-        return console.error(err.message);
-    }
-    console.log('Row inserted successfully!');
-});
+db2.query('INSERT INTO members (Username, balance) VALUES ($1, $2)', ['meatbails', 100]).then(
+    console.log("worked")
+);
 
-// Close the database connection
-db2.close();
