@@ -14,7 +14,6 @@ function execute(message, args){
             message.channel.send("An error occurred while retrieving the balance.");
         } else {
             if (row) {
-                message.channel.send(`${args[0]} balance is: ${row.balance}`);
                 return row.balance;
             } else {
                 message.channel.send(`No record found for username: ${args[0]}`);

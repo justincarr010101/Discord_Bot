@@ -6,8 +6,8 @@ class Player {
     constructor(message, id) {
         this.id = id; // Player's ID
         this.hand = []; // Player's hand of cards
-        if (this.id != 'dealer') {
-            this.balance = execute(message, [id]); // Player's balance
+        if (this.id !== 'dealer') {
+            this.balance = execute(message, [this.id]); // Player's balance
         }
         this.bet = 0; // Player's current bet
     }
@@ -43,6 +43,7 @@ class Player {
 
     resetHand() {
         this.hand = [];
+        this.bet = 0;
     }
 
     placeBet(amount) {
