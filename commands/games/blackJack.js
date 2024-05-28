@@ -1,13 +1,14 @@
 //get player and game class
-const { Player } = require();
-const { BlackjackGame } = require();
+const { Player } = require('../../blackJackClasses/player.js');
+const { BlackjackGame } = require('../../blackJackClasses/game.js');
 
 //create variables for managing architecture
 const { Client, GatewayIntentBits, MessageEmbed } = require('discord.js');
 const getBalance = require('../Currency_Commands/getBalance');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
-const gamesChannel = '';
-const game = game;
+const blackjackGames = new Map();
+let gamesChannel = '';
+let game;
 
 // Create betting variables
 const betAmounts = {
@@ -20,52 +21,51 @@ const betAmounts = {
 
 
 //execute function called from export
-function execute(){
+function execute(message, args){
 
     //first get the games channel to make sure we are in the right place
-    message.channel = getChannel();
-    
+    message.channel = getChannel(message);
+
     //check if game is alreasy started
-    if (blackjackGames.has(message.channel === 'games')) {
+    if (game !== undefined && game !== null) {
         message.channel.send('A game is already in progress in games channel.');
     } else {
         //if no game start game and set players using args
-        game = new BlackjackGame(message.channel);
+        game = new BlackjackGame(message);
         blackjackGames.set(message.channel, game);
         if(game){
             args.forEach(arg => {
-                game.addPlayer(arg);
+                game.addPlayer(message, arg);
                 message.channel.send(`${arg} has joined the game!`);
+
+                //set each players balance using SQL later
+
+
             });
+
             //use the channel to start the game
-            startGame(channel);
+            game.startGame(message);
+
         } else {
             message.channel.send('No game in progress. Type `.blackjack` to start a new game.');
         }
     }
-
 }
 
-function getChannel(){
+function getChannel(message){
 
     // Get the guild (server) object
     const guild = message.guild;
-    
+
     // Check if the guild is found
     if (guild) {
-        // Find the text channel named "games"
-        gamesChannel = guild.channels.cache.find(channel => channel.name === 'games' && channel.type === 'GUILD_TEXT');
-        // Check if the channel is found
-        if (gamesChannel) {
-            // Start game in games channel
-            makeBet(gamesChannel);
-        } else {
-            console.log('Games channel not found. Cannot play game without channel');
-        }
+        // Find the text channel named "blackjack"
+        gamesChannel = guild.channels.cache.find(channel => channel.name === 'blackjack');
     } else {
         console.log('Guild not found.');
     }
 
+    return gamesChannel;
 }
 
 async function makeBet(player, channel) {
@@ -79,7 +79,7 @@ async function makeBet(player, channel) {
         await betMessage.react(emoji);
     }
 
-    //const filter = (reaction, user) => Object.keys(betAmounts).includes(reaction.emoji.name) && user.id === player.id;
+    const filter = (reaction, user) => Object.keys(betAmounts).includes(reaction.emoji.name) && user.id === player.id;
 
     const collector = betMessage.createReactionCollector({ filter, max: 1, time: 60000 });
 

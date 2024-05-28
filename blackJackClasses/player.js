@@ -1,9 +1,12 @@
+const { Client, Intents, GatewayIntentBits } = require('discord.js');
+const { execute } = require('../commands/Currency_Commands/getBalance.js');
+
 //player class for each player
 class Player {
-    constructor(id, initialBalance = 0) {
+    constructor(message, id) {
         this.id = id; // Player's ID
         this.hand = []; // Player's hand of cards
-        this.balance = initialBalance; // Player's balance
+        this.balance = execute(message, [id]); // Player's balance
         this.bet = 0; // Player's current bet
     }
 

@@ -1,14 +1,37 @@
+const { ButtonStyle } = require('discord.js');
+const { Player } = require('../blackJackClasses/player.js');
+const { ActionRowBuilder , ButtonBuilder } = require('discord.js');
+let playerValue;
+
+//set hit or stand buttons
+const buttonHit = new ButtonBuilder()
+    .setStyle(ButtonStyle.Success)
+    .setLabel('Hit')
+    .setCustomId('hit');
+const buttonStand = new ButtonBuilder()
+    .setStyle(ButtonStyle.Danger)
+    .setLabel('Stand')
+    .setCustomId('stand');
+//create row for presenting the buttons
+const row = new ActionRowBuilder()
+    .addComponents(buttonHit, buttonStand);
+
 class BlackjackGame {
-    constructor(channel) {
-        this.channel = channel;
+    constructor(message) {
+        this.channel = message.channel;
         this.players = []; // Array of Player objects
-        this.dealer = new Player('dealer'); // Create a dealer as a player with a special ID
+        this.dealer = new Player(message, 'dealer'); // Create a dealer as a player with a special ID
         this.currentPlayerIndex = 0;
         this.deck = [];
+        this.message = message;
     }
 
-    addPlayer(playerId) {
-        const player = new Player(playerId);
+    getDealerFirstCard(){
+        return this.dealer.hand[0];
+    }
+
+    addPlayer(message, playerId) {
+        const player = new Player(message, playerId);
         this.players.push(player);
     }
 
@@ -40,7 +63,7 @@ class BlackjackGame {
         player.addCard(card);
     }
 
-    startGame() {
+    startGame(message) {
         this.players.forEach(player => player.resetHand());
         this.dealer.resetHand();
         this.currentPlayerIndex = 0;
@@ -50,70 +73,67 @@ class BlackjackGame {
             this.dealCard(this.dealer);
         }
 
-        this.playerTurn();
+        this.playerTurn(message);
     }
 
-    async playerTurn() {
+    async playerTurn(message) {
+
+        //check if its currently the dealer first.
         if (this.currentPlayerIndex >= this.players.length) {
             return this.dealerTurn();
         }
 
+        //get current player
         const player = this.players[this.currentPlayerIndex];
-        const embed = new MessageEmbed()
-            .setTitle(`Player ${player.id}'s Turn`)
-            .setDescription(`Dealer's Hand: ${this.dealer.hand[0]} ?\nYour Hand: ${player.hand.join(', ')} (Value: ${player.getHandValue()})\n\nChoose your action: Hit or Stand`);
 
-        const message = await this.channel.send({ embeds: [embed] });
+        //show them the message and ask if they want to hit or stand
+        const newmessage = await message.channel.send({ 
+            content : `Dealers Hand: ${this.getDealerFirstCard()} Choose your action: \n Your Hand is: ${player.hand}`,
+            components: [row],
+        }) .then(newmessage => newmessage.components[0]); 
+        
+        let hitButton = newmessage.components[0];
+        let standButton = newmessage.components[1];
 
-        await message.react('🇭'); // Hit
-        await message.react('🇸'); // Stand
-
-        const filter = (reaction, user) => ['🇭', '🇸'].includes(reaction.emoji.name) && user.id === player.id;
-        const collector = message.createReactionCollector({ filter, max: 1, time: 60000 });
-
-        collector.on('collect', async (reaction, user) => {
-            if (reaction.emoji.name === '🇭') { // Hit
-                this.dealCard(player);
-                const playerValue = player.getHandValue();
-                if (playerValue > 21) {
-                    const bustEmbed = new MessageEmbed()
-                        .setTitle(`Player ${player.id} Busted!`)
-                        .setDescription(`Your Hand: ${player.hand.join(', ')} (Value: ${playerValue})`);
-                    await this.channel.send({ embeds: [bustEmbed] });
+        //wait for the player to choose hit or stand
+        this.channel.client.on('interactionCreate', async (button) => {
+            setTimeout(() => {
+                console.log("A button was clicked bro bro")
+                debugger;
+                if(button.component.data.id === hitButton.data.id){
+                    console.log("hit button")
+                    message.channel.send('You chose to hit!', true);
+                    this.dealCard(player);
+                    playerValue = player.getHandValue();
+                    if (playerValue > 21) {
+                        //go to next player and ask again
+                        message.channel.send(`HAHA @${this.players[this.currentPlayerIndex]}, BUSTED!`);
+                        this.currentPlayerIndex++;
+                        this.playerTurn();
+                    } else {
+                        //ask if player wants to hit or stand again
+                        this.playerTurn();
+                    }
+                } else if (button.component.data.id == standButton.data.id){
+                    //if player stands then tell them they stood and go next 
+                    message.channel.send('You chose to stand!', true);
                     this.currentPlayerIndex++;
                     this.playerTurn();
-                } else {
-                    const updatedEmbed = new MessageEmbed()
-                        .setTitle(`Player ${player.id}'s Turn`)
-                        .setDescription(`Dealer's Hand: ${this.dealer.hand[0]} ?\nYour Hand: ${player.hand.join(', ')} (Value: ${playerValue})\n\nChoose your action: Hit or Stand`);
-                    await message.edit({ embeds: [updatedEmbed] });
                 }
-            } else if (reaction.emoji.name === '🇸') { // Stand
-                this.currentPlayerIndex++;
-                this.playerTurn();
             }
-        });
-
-        collector.on('end', collected => {
-            if (collected.size === 0) {
-                this.channel.send(`${player.id}, you did not make a choice in time.`);
-                this.currentPlayerIndex++;
-                this.playerTurn();
-            }
-        });
+        )}, "50000"); //50 second timeout
     }
 
     async dealerTurn() {
+
+        //If dealer is below 17 keep hitting there hand
         while (this.dealer.getHandValue() < 17) {
             this.dealCard(this.dealer);
         }
 
+        //get dealer value, send it, and compare with each players value
         const dealerValue = this.dealer.getHandValue();
-        const dealerEmbed = new MessageEmbed()
-            .setTitle('Dealer\'s Turn')
-            .setDescription(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`);
-
-        await this.channel.send({ embeds: [dealerEmbed] });
+        this.message.channel.send(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`)
 
         // Compare dealer hand with each player
         for (const player of this.players) {
@@ -132,7 +152,7 @@ class BlackjackGame {
                 result = `Player ${player.id} ties with dealer at ${playerValue}. New Balance: ${player.balance}`;
             }
 
-            await this.channel.send(result);
+            await this.message.channel.send(result);
         }
     }
 }

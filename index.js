@@ -91,16 +91,27 @@ client.on('messageCreate', message => {
     if (!client.commands.has(commandName)) return; // Check commands collection for command said
 
     const command = client.commands.get(commandName);
+    let argsUsername;
+    const guild = message.guild;
+    
+    for (let i = 0; i < args.length; i++){
+        const userId = args[i].replace(/[<@!>]/g, '');
+        try {
+            const member = guild.members.fetch(userId);
+            argsUsername.push(member["[[PromiseResult]]"].user.username);
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            argsUsername.push('Unknown User'); // Handle user not found case
+        }
+    }
 
     try {
-        debugger;
         command.execute(message, args);
     } catch (error) {
         console.error(error);
         message.reply('there was an error executing that command.');
     }
 });
-
 
 client.on('guildMemberAdd', member => {
     console.log("guild member joined" + member.user.username );
