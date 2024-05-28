@@ -34,6 +34,9 @@ class BlackjackGame {
         const player = new Player(message, playerId);
         this.players.push(player);
     }
+    getPlayer(playerId){
+        return this.players.find(player => player.id === playerId);
+    }
 
     createDeck() {
         const suits = ['♠', '♣', '♦', '♥'];
@@ -63,7 +66,7 @@ class BlackjackGame {
         player.addCard(card);
     }
 
-    startGame(message) {
+    startGame() {
         this.players.forEach(player => player.resetHand());
         this.dealer.resetHand();
         this.currentPlayerIndex = 0;
@@ -73,10 +76,10 @@ class BlackjackGame {
             this.dealCard(this.dealer);
         }
 
-        this.playerTurn(message);
+        this.playerTurn();
     }
 
-    async playerTurn(message) {
+    async playerTurn() {
 
         //check if its currently the dealer first.
         if (this.currentPlayerIndex >= this.players.length) {
@@ -87,7 +90,7 @@ class BlackjackGame {
         const player = this.players[this.currentPlayerIndex];
 
         //show them the message and ask if they want to hit or stand
-        const newmessage = await message.channel.send({ 
+        const newmessage = await this.message.channel.send({ 
             content : `Dealers Hand: ${this.getDealerFirstCard()} Choose your action: \n Your Hand is: ${player.hand}`,
             components: [row],
         }) .then(newmessage => newmessage.components[0]); 
@@ -99,15 +102,14 @@ class BlackjackGame {
         this.channel.client.on('interactionCreate', async (button) => {
             setTimeout(() => {
                 console.log("A button was clicked bro bro")
-                debugger;
                 if(button.component.data.id === hitButton.data.id){
                     console.log("hit button")
-                    message.channel.send('You chose to hit!', true);
+                    this.message.channel.send('You chose to hit!', true);
                     this.dealCard(player);
                     playerValue = player.getHandValue();
                     if (playerValue > 21) {
                         //go to next player and ask again
-                        message.channel.send(`HAHA @${this.players[this.currentPlayerIndex]}, BUSTED!`);
+                        this.message.channel.send(`HAHA @${this.players[this.currentPlayerIndex]}, BUSTED!`);
                         this.currentPlayerIndex++;
                         this.playerTurn();
                     } else {
@@ -116,7 +118,7 @@ class BlackjackGame {
                     }
                 } else if (button.component.data.id == standButton.data.id){
                     //if player stands then tell them they stood and go next 
-                    message.channel.send('You chose to stand!', true);
+                    this.message.channel.send('You chose to stand!', true);
                     this.currentPlayerIndex++;
                     this.playerTurn();
                 }

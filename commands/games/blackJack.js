@@ -3,7 +3,7 @@ const { Player } = require('../../blackJackClasses/player.js');
 const { BlackjackGame } = require('../../blackJackClasses/game.js');
 
 //create variables for managing architecture
-const { Client, GatewayIntentBits, MessageEmbed } = require('discord.js');
+const { Client, GatewayIntentBits, MessageEmbed, EmbedBuilder } = require('discord.js');
 const getBalance = require('../Currency_Commands/getBalance');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 const blackjackGames = new Map();
@@ -36,13 +36,15 @@ function execute(message, args){
         if(game){
             args.forEach(arg => {
                 game.addPlayer(message, arg);
+                let player = game.getPlayer(arg)
+                makeBet(player, message);
                 message.channel.send(`${arg} has joined the game!`);
 
                 //set each players balance using SQL later
 
 
             });
-
+            
             //use the channel to start the game
             game.startGame(message);
 
@@ -68,12 +70,12 @@ function getChannel(message){
     return gamesChannel;
 }
 
-async function makeBet(player, channel) {
-    const embed = new MessageEmbed()
+async function makeBet(player, message) {
+    const embed = new EmbedBuilder()
         .setTitle('Place Your Bet')
         .setDescription('Choose your bet amount:\n1️⃣: 100\n2️⃣: 200\n3️⃣: 300\n4️⃣: 400\n5️⃣: 500');
 
-    const betMessage = await channel.send({ embeds: [embed] });
+    const betMessage = await message.channel.send({ embeds: [embed] });
 
     for (const emoji of Object.keys(betAmounts)) {
         await betMessage.react(emoji);

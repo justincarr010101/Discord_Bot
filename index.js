@@ -4,7 +4,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const db2 = require('./db.js');
 const db = db2.getDB();
 const http = require('http');
-
+const admins = ["justincarr", "meatbails", "quickphix."];
 const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
@@ -82,7 +82,7 @@ loadCommands('./commands/random_Commands');
 loadCommands('./commands/games');
 
 // Event listener for message creation
-client.on('messageCreate', message => {
+client.on('messageCreate', async message => {
     if (!message.content.startsWith('.') || message.author.bot) return; // Check if the user is a bot
 
     const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
@@ -91,14 +91,14 @@ client.on('messageCreate', message => {
     if (!client.commands.has(commandName)) return; // Check commands collection for command said
 
     const command = client.commands.get(commandName);
-    let argsUsername;
+    let argsUsername = [];
     const guild = message.guild;
     
     for (let i = 0; i < args.length; i++){
         const userId = args[i].replace(/[<@!>]/g, '');
         try {
-            const member = guild.members.fetch(userId);
-            argsUsername.push(member["[[PromiseResult]]"].user.username);
+            const member = await guild.members.fetch(userId).then(resp => resp);
+            argsUsername.push(member.user.username);
         } catch (error) {
             console.error('Error fetching user:', error);
             argsUsername.push('Unknown User'); // Handle user not found case
@@ -106,7 +106,8 @@ client.on('messageCreate', message => {
     }
 
     try {
-        command.execute(message, args);
+        console.log("Executing command: " + commandName );
+        command.execute(message, argsUsername);
     } catch (error) {
         console.error(error);
         message.reply('there was an error executing that command.');
