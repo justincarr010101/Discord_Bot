@@ -88,7 +88,6 @@ const loadAdminCommands = (dir) => {
 loadCommands('./commands/Currency_Commands');
 loadCommands('./commands/music_commands');
 loadCommands('./commands/random_Commands');
-loadAdminCommands('./commands/admin_commands');
 loadCommands('./commands/games');
 
 // Event listener for message creation
