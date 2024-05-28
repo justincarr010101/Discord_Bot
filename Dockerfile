@@ -12,7 +12,6 @@ RUN npm install --production
 
 # Bundle app source inside Docker image
 COPY . .
-COPY .env .env
 
 
 # Define environment variable
