@@ -14,6 +14,7 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildVoiceStates] });
 client.commands = new Collection();
+client.adminCommands = new Collection();
 
 //checking how the player is setup 
 const { Player } = require('discord-player');
@@ -72,6 +73,14 @@ const loadCommands = (dir) => {
         const command = require(`${dir}/${file}`);
         client.commands.set(command.name, command);
         console.log(`Loaded command: ${command.name}`);
+    }
+};
+const loadAdminCommands = (dir) => {
+    const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const command = require(`${dir}/${file}`);
+        client.adminCommands.set(command.name, command);
+        console.log(`Loaded admin command: ${command.name}`);
     }
 };
 
@@ -133,6 +142,7 @@ client.login(TOKEN);
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
+
 
 //for heroku to be happy
 const PORT = process.env.PORT || 3000;
