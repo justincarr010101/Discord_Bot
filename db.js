@@ -19,22 +19,50 @@ function query(queryStr, args) {
             reject(new Error('Client is not defined'));
         }
     })
-    // if (client) {
-    //     return client.query(queryStr, args)
-    //         .then(res => res.rows)
-    //         .catch(err => {
-    //             console.error('Error Querying DB', err.message);
-    //             throw err; // Rethrow the error to be handled by the caller if needed
-    //         });
-    // } else {
-    //     return Promise.reject(new Error('Client is not defined'));
-    // }
+}
+
+async function setMemberBalance(username, balance) {
+    try {
+        const updateBalanceQuery = `
+            UPDATE members
+            SET balance = $1
+            WHERE username = $2;
+        `;
+        const res = await client.query(updateBalanceQuery, [balance, username]);
+        if (res.rowCount > 0) {
+            console.log(`Set balance for user: ${username} to ${balance}`);
+        } else {
+            console.log(`User ${username} not found.`);
+        }
+    } catch (err) {
+        console.error('Error setting member balance:', err.message);
+    }
+}
+
+async function initializeMemberBalance(username, balance) {
+    try {
+        const insertMemberQuery = `
+            INSERT INTO members (Username, Balance)
+            VALUES ($1, $2)
+            ON CONFLICT (Username) DO NOTHING;
+        `;
+        const res = await client.query(insertMemberQuery, [username, balance]);
+        if (res.rowCount > 0) {
+            console.log(`Initialized balance for user: ${username}`);
+        } else {
+            console.log(`User ${username} already exists.`);
+        }
+    } catch (err) {
+        console.error('Error initializing member balance:', err.message);
+    }
 }
 async function initDatabase() {
     if (!client){
         client = new Client({
             connectionString: process.env.DATABASE_URL,
-            ssl: false,
+            ssl: {
+                rejectUnauthorized: false // Allow self-signed certificates
+            }
         });
         await client.connect();
         console.log('Connected to the database.');
@@ -44,7 +72,7 @@ async function initDatabase() {
         const createTableQuery = `
             CREATE TABLE IF NOT EXISTS members (
                 UserID SERIAL PRIMARY KEY,
-                Username VARCHAR(255),
+                Username VARCHAR(255) UNIQUE,
                 Balance INTEGER DEFAULT 0
             );
         `;
@@ -80,5 +108,7 @@ module.exports = {
     initDatabase,
     getDB,
     addMember,
-    query
+    query,
+    initializeMemberBalance, 
+    setMemberBalance
 };

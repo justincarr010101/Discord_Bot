@@ -4,7 +4,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const db2 = require('./db.js');
 const db = db2.getDB();
 const http = require('http');
-
+const admins = ["justincarr", "meatbails", "quickphix."];
 const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
@@ -14,6 +14,7 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildVoiceStates] });
 client.commands = new Collection();
+client.adminCommands = new Collection();
 
 //checking how the player is setup 
 const { Player } = require('discord-player');
@@ -75,11 +76,20 @@ const loadCommands = (dir) => {
         console.log(`Loaded command: ${command.name}`);
     }
 };
+const loadAdminCommands = (dir) => {
+    const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const command = require(`${dir}/${file}`);
+        client.adminCommands.set(command.name, command);
+        console.log(`Loaded admin command: ${command.name}`);
+    }
+};
 
 // Load commands from diferent folders
 loadCommands('./commands/Currency_Commands');
 loadCommands('./commands/music_commands');
 loadCommands('./commands/random_Commands');
+loadAdminCommands('./commands/admin_commands');
 
 // Event listener for message creation
 client.on('messageCreate', message => {
@@ -87,13 +97,23 @@ client.on('messageCreate', message => {
 
     const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
     const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
-
-    if (!client.commands.has(commandName)) return; // Check commands collection for command said
-
-    const command = client.commands.get(commandName);
+    var command; 
+    if (client.commands.has(commandName)){
+        command = client.commands.get(commandName);
+    }else if (client.adminCommands.has(commandName)){
+        if (admins.includes(message.author.tag)){
+            command = client.adminCommands.get(commandName);
+        }else{
+            return;
+        }
+    }else{
+        return;
+    }
 
     try {
+        console.log("Executing command: " + commandName );
         command.execute(message, args);
+        
     } catch (error) {
         console.error(error);
         message.reply('there was an error executing that command.');
@@ -122,6 +142,7 @@ client.login(TOKEN);
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
+
 
 //for heroku to be happy
 const PORT = process.env.PORT || 3000;

@@ -15,7 +15,7 @@ module.exports = {
         db2.query('SELECT balance FROM members WHERE Username = $1', [args[0]])
         .then(result => {
             console.log('Query result:', result);
-            message.channel.send(`${args[0]} balance is: ${result.balance}`);
+            message.channel.send(`${args[0]} balance is: ${result[0].balance}`);
             // Further processing with anot
         })
         .catch(err => {
