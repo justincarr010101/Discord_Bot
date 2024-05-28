@@ -6,7 +6,9 @@ class Player {
     constructor(message, id) {
         this.id = id; // Player's ID
         this.hand = []; // Player's hand of cards
-        this.balance = execute(message, [id]); // Player's balance
+        if (!this.id == 'dealer') {
+            this.balance = this.execute(message, [id]); // Player's balance
+        }
         this.bet = 0; // Player's current bet
     }
 
@@ -18,7 +20,7 @@ class Player {
         let value = 0;
         let aces = 0;
 
-        this.hand.forEach(card => {
+        value, aces += this.hand.forEach(card => {
             if (card === 'A') {
                 aces += 1;
                 value += 11;
@@ -27,13 +29,14 @@ class Player {
             } else {
                 value += parseInt(card);
             }
+            return {value, aces};
         });
 
         while (value > 21 && aces > 0) {
             value -= 10;
             aces -= 1;
         }
-
+        console.log(value);
         return value;
     }
 
