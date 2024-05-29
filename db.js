@@ -1,5 +1,6 @@
 // Import SQLite module
 const channel = "welcome-and-rules";
+require('dotenv').config();
 const { Client } = require('pg');
 let client; 
 // Initialize PostgreSQL client
@@ -28,21 +29,18 @@ async function setMemberBalance(username, balance) {
         SET balance = $1
         WHERE username = $2;
         `;
-        const addMember=`INSERT INTO members (balance, Username) VALUES ($1, $2)`;
 
+        const addMember=`INSERT INTO members (balance, Username) VALUES ($1, $2)`;
         const res = await client.query(updateBalanceQuery, [balance, username]);
 
         if (res.rowCount > 0) {
             console.log(`Set balance for user: ${username} to ${balance}`);
             resolve();
-
         } else {
             const res2 = await client.query(addMember, [balance, username]);
             if(res2.rowCount > 0 ){
-                message.channel.send(`Added user: ${username} with balance: ${balance}`);
                 resolve();
             }else{
-                console.log(`User ${username} not found.`);
                 reject();
             }
         }
@@ -70,7 +68,11 @@ async function initDatabase() {
         client = new Client({
             connectionString: process.env.DATABASE_URL,
             ssl: false,
+<<<<<<< HEAD
             password: "",
+=======
+            password: '',
+>>>>>>> 9843383 (pushing so someone can check the error)
             user: "postgres"
         });
         await client.connect();

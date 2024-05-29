@@ -1,5 +1,6 @@
 const { Client, Intents, GatewayIntentBits } = require('discord.js');
 const { execute } = require('../commands/Currency_Commands/getBalance.js');
+const { setMemberBalance } = require('../db.js');
 
 //player class for each player
 class Player {
@@ -7,7 +8,7 @@ class Player {
         this.id = id; // Player's ID
         this.hand = []; // Player's hand of cards
         if (this.id !== 'dealer') {
-            this.balance = execute(message, [this.id]); // Player's balance
+            this.balance = 0;
         }
         this.bet = 0; // Player's current bet
         this.winings = 0;
@@ -17,28 +18,38 @@ class Player {
         this.hand.push(card);
     }
 
+    async updateBalance(message){
+        if (this.id !== 'dealer') {
+            this.balance = await execute(message, [this.id]); // Player's balance
+        }
+    }
+
     getHandValue() {
         let value = 0;
         let aces = 0;
 
-        value, aces += this.hand.forEach(card => {
+        this.hand.forEach(card => {
+            let value2 = 0;
+            let aces2 = 0;
+
             card = card.slice(0, -1);
             if (card === 'A') {
-                aces += 1;
-                value += 11;
+                aces2 += 1;
+                value2 += 11;
             } else if (['K', 'Q', 'J'].includes(card)) {
-                value += 10;
+                value2 += 10;
             } else {
-                value += parseInt(card);
+                value2 += parseInt(card);
             }
-            return {value, aces};
+            value += value2;
+            aces += aces2;
         });
 
         while (value > 21 && aces > 0) {
             value -= 10;
             aces -= 1;
         }
-        console.log(value);
+        //console.log(value);
         return value;
     }
 
@@ -57,14 +68,16 @@ class Player {
         }
     }
 
+    updateDatabaseBalance(){
+        setMemberBalance(this.id, this.balance);
+    }
+
     winBet() {
-        console.log(this.player.id + this.player.bet);
         this.balance += this.bet * 2;
         this.bet = 0;
     }
 
     tieBet() {
-        console.log(this.player.id + this.player.bet);
         this.balance += this.bet;
         this.bet = 0;
     }

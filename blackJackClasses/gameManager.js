@@ -16,11 +16,10 @@ function getGame() {
 }
 
 //end game
-function endGame() {
+function endGameObject() {
     if (currentGame) {
-        currentGame.endGame();
         currentGame = null;
     }
 }
 
-module.exports = { createGame, getGame, endGame };
+module.exports = { createGame, endGameObject, getGame };

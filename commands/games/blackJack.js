@@ -46,7 +46,7 @@ function execute(message, args){
             console.log(game.sittingOut);
 
             //use the channel to start the game
-            game.startGame(game, message);
+            game.startGame(message);
 
         } else {
             message.channel.send('No game in progress. Type `.blackjack` to start a new game.');
