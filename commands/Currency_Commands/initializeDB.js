@@ -1,5 +1,6 @@
 const db2 = require('../../db.js');
 db2.getDB();
+
 // getBalance.js
 async function execute(message, args){
     try {

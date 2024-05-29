@@ -1,7 +1,7 @@
 const db2 = require('../../db.js');
 db2.getDB();
 
-execute(message, args) {
+async function execute(message, args) {
 
     // Check if username argument is provided
     if (!args[0]) {
@@ -18,11 +18,11 @@ execute(message, args) {
     .catch(err => {
         console.error('Error in main function:', err.message);
     });
-}
+};
 
 // getBalance.js
 module.exports = {
     name: 'balance',
     description: 'Check your balance',
-    execute
+    execute,
 };
