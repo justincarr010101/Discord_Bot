@@ -10,7 +10,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 let gamesChannel = '';
 
 //execute function called from export
- function execute(message, args){
+function execute(message, args){
     //check if the arg is .blackjack end
     if (args[0] == 'stop'){
         //get game instance

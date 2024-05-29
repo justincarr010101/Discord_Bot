@@ -10,6 +10,7 @@ class Player {
             this.balance = execute(message, [this.id]); // Player's balance
         }
         this.bet = 0; // Player's current bet
+        this.winings = 0;
     }
 
     addCard(card) {
@@ -49,7 +50,7 @@ class Player {
     placeBet(amount) {
         if (amount <= this.balance) {
             this.balance -= amount;
-            this.bet = amount;
+            this.bet = 0;
             return true;
         } else {
             return false;
