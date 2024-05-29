@@ -49,7 +49,6 @@ client.on('sharderror', (error) => {
 });
 
 
-
 client.on('error', (error) => {
     console.error('Client encountered an error:', error);
 });
@@ -76,6 +75,7 @@ const loadCommands = (dir) => {
         console.log(`Loaded command: ${command.name}`);
     }
 };
+
 const loadAdminCommands = (dir) => {
     const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
@@ -89,15 +89,23 @@ const loadAdminCommands = (dir) => {
 loadCommands('./commands/Currency_Commands');
 loadCommands('./commands/music_commands');
 loadCommands('./commands/random_Commands');
+loadCommands('./commands/admin_commands');
 loadAdminCommands('./commands/admin_commands');
+loadCommands('./commands/games');
 
 // Event listener for message creation
-client.on('messageCreate', message => {
+client.on('messageCreate', async message => {
     if (!message.content.startsWith('.') || message.author.bot) return; // Check if the user is a bot
 
     const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
     const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
+
+    if (!client.commands.has(commandName)) return; // Check commands collection for command said
+
+    let argsUsername = [];
+    const guild = message.guild;
     var command; 
+
     if (client.commands.has(commandName)){
         command = client.commands.get(commandName);
     }else if (client.adminCommands.has(commandName)){
@@ -110,6 +118,17 @@ client.on('messageCreate', message => {
         return;
     }
 
+    for (let i = 0; i < args.length; i++){
+        const userId = args[i].replace(/[<@!>]/g, '');
+        try {
+            const member = await guild.members.fetch(userId).then(resp => resp);
+            argsUsername.push(member.user.username);
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            argsUsername.push('Unknown User'); // Handle user not found case
+        }
+    }
+
     try {
         console.log("Executing command: " + commandName );
         command.execute(message, args);
@@ -120,16 +139,10 @@ client.on('messageCreate', message => {
     }
 });
 
-
 client.on('guildMemberAdd', member => {
     console.log("guild member joined" + member.user.username );
-    // Your code to handle the event goes here
-
     db2.addMember(member.user.username);  
-
 });
-
-
 
 //connection code
 const TOKEN = process.env.TOKEN;

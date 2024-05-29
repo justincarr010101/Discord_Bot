@@ -9,7 +9,10 @@ db2.connect();
 console.log('Connected to the database.');
 
 // Execute the INSERT query
-db2.query('INSERT INTO members (Username, balance) VALUES ($1, $2)', ['meatbails', 100]).then(
-    console.log("worked")
-);
+db2.run('INSERT INTO members (Username, balance) VALUES (?, ?)', ['justincarr', 100000], function(err) {
+    if (err) {
+        return console.error(err.message);
+    }
+    console.log('Row inserted successfully!');
+});
 
