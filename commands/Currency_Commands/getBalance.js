@@ -1,7 +1,7 @@
 const db2 = require('../../db.js');
 db2.getDB();
 
-async function execute(message, args) {
+function execute(message, args) {
 
     // Check if username argument is provided
     if (!args[0]) {
@@ -9,10 +9,12 @@ async function execute(message, args) {
         return;
     }
     // Fetch balance from the database
-    db2.query('SELECT balance FROM members WHERE Username = $1', [args[0]])
+    return db2.query('SELECT balance FROM members WHERE Username = $1', [args[0]])
     .then(result => {
         console.log('Query result:', result);
-        message.channel.send(`${args[0]} balance is: ${result[0].balance}`);
+        
+        //messes with the BlackJack printing  - message.channel.send(`${args[0]} balance is: ${result[0].balance}`);
+        return result[0].balance;
         // Further processing with anot
     })
     .catch(err => {

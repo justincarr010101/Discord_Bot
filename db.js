@@ -22,23 +22,32 @@ function query(queryStr, args) {
 }
 
 async function setMemberBalance(username, balance) {
-    try {
+    return new Promise(async (resolve, reject) =>{
         const updateBalanceQuery = `
-            UPDATE members
-            SET balance = $1
-            WHERE username = $2;
+        UPDATE members
+        SET balance = $1
+        WHERE username = $2;
         `;
+        const addMember=`INSERT INTO members (balance, Username) VALUES ($1, $2)`;
+
         const res = await client.query(updateBalanceQuery, [balance, username]);
+
         if (res.rowCount > 0) {
             console.log(`Set balance for user: ${username} to ${balance}`);
-        } else {
-            console.log(`User ${username} not found.`);
-        }
-    } catch (err) {
-        console.error('Error setting member balance:', err.message);
-    }
-}
+            resolve();
 
+        } else {
+            const res2 = await client.query(addMember, [balance, username]);
+            if(res2.rowCount > 0 ){
+                message.channel.send(`Added user: ${username} with balance: ${balance}`);
+                resolve();
+            }else{
+                console.log(`User ${username} not found.`);
+                reject();
+            }
+        }
+    });
+}
 async function initializeMemberBalance(username, balance) {
     try {
         const insertMemberQuery = `
@@ -60,9 +69,9 @@ async function initDatabase() {
     if (!client){
         client = new Client({
             connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false // Allow self-signed certificates
-            }
+            ssl: false,
+            password: "",
+            user: "postgres"
         });
         await client.connect();
         console.log('Connected to the database.');

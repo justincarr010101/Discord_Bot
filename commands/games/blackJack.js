@@ -26,8 +26,8 @@ function execute(message, args){
         message.channel.send('A game is already in progress in games channel.');
     } else { //check all inputs, logic, and start game
 
-        for (const arg of args) { //make sure all argumensts are users and those users are guild members
-            const member = message.guild.members.cache.find(m => m.user.username === arg);
+        for (const arg of args) { //make sure all arguments are users and those users are guild members
+            const member = message.guild.members.fetch(m => m.user.username === arg);
             if (!member) {
                 message.channel.send(`User ${arg} is not a valid guild member.`);
                 return;  // Exit the function if any user is not a valid guild member

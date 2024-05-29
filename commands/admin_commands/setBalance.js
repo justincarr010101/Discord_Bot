@@ -22,8 +22,10 @@ module.exports = {
             }
 
             // Set the balance for the specified user
-            await db2.setMemberBalance(username, balance);
-            message.channel.send(`Set balance for ${username} to ${balance}`);
+            await db2.setMemberBalance(username, balance)
+            .then(()=>message.channel.send(`Set balance for ${username} to ${balance}`))
+            .catch(()=>message.channel.send(`User ${username} not found.`));
+            
         } catch (error) {
             console.error('Error executing setbalance command:', error);
             message.channel.send('There was an error setting the balance.');

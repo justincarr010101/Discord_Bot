@@ -50,7 +50,7 @@ class Player {
     placeBet(amount) {
         if (amount <= this.balance) {
             this.balance -= amount;
-            this.bet = 0;
+            this.bet = amount;
             return true;
         } else {
             return false;
@@ -58,11 +58,13 @@ class Player {
     }
 
     winBet() {
+        console.log(this.player.id + this.player.bet);
         this.balance += this.bet * 2;
         this.bet = 0;
     }
 
     tieBet() {
+        console.log(this.player.id + this.player.bet);
         this.balance += this.bet;
         this.bet = 0;
     }

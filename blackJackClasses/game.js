@@ -287,13 +287,14 @@ class BlackjackGame {
                 if (playerValue > 21) {
                     result = `HAHA, ${player.id} busted with ${playerValue}. Dealer wins. You lost: ${player.bet} `;
                 } else if (dealerValue > 21 || playerValue > dealerValue) {
+                    result = `Congrats, ${player.id} wins with ${playerValue} against dealer's ${dealerValue}. You win: ${player.bet}`;
                     player.winBet();
-                    result = `Congrats, ${player.id} wins with ${playerValue} against dealer's ${dealerValue}. You win: ${player.bet*2}`;
                 } else if (playerValue < dealerValue) {
                     result = `Player ${player.id} loses with ${playerValue} against dealer's ${dealerValue}. You lost: ${player.bet}`;
+                    
                 } else {
-                    player.tieBet();
                     result = `Player ${player.id} ties with dealer at ${playerValue}. No loses`;
+                    player.tieBet();
                 }
                 await this.message.channel.send(result);
             }

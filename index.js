@@ -117,26 +117,30 @@ client.on('messageCreate', async message => {
     }else{
         return;
     }
-
-    for (let i = 0; i < args.length; i++){
-        const userId = args[i].replace(/[<@!>]/g, '');
+    if(commandName == "blackjack"){
+        for (let i = 0; i < args.length; i++){
+            const userId = args[i].replace(/[<@!>]/g, '');
+            try {
+                const member = await guild.members.fetch(userId).then(resp => resp);
+                argsUsername.push(member.user.username);
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                argsUsername.push('Unknown User'); // Handle user not found case
+                
+            }
+        }
+        command.execute(message, argsUsername);
+    }else{
         try {
-            const member = await guild.members.fetch(userId).then(resp => resp);
-            argsUsername.push(member.user.username);
+            console.log("Executing command: " + commandName );
+            command.execute(message, args);
+            
         } catch (error) {
-            console.error('Error fetching user:', error);
-            argsUsername.push('Unknown User'); // Handle user not found case
+            console.error(error);
+            message.reply('there was an error executing that command.');
         }
     }
-
-    try {
-        console.log("Executing command: " + commandName );
-        command.execute(message, args);
-        
-    } catch (error) {
-        console.error(error);
-        message.reply('there was an error executing that command.');
-    }
+   
 });
 
 client.on('guildMemberAdd', member => {
