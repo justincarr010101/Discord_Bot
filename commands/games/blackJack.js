@@ -18,12 +18,25 @@ function execute(message, args){
         //call end function
         endGame(endGame);
     }
-
     //first get the games channel to make sure we are in the right place
     message.channel = getChannel(message);
 
     if (getGame() !== null) { //check if there is already a game instance
-        message.channel.send('A game is already in progress in games channel.');
+        
+        const game = getGame();
+        if(game){ //add all players to the game
+            args.forEach(arg => {
+                if(game.getPlayer(arg)){
+                    game.channel.send(`${arg} is already in the game `);
+                }else{
+                    game.addPlayer(message, arg);
+                    console.log(game.getIndex(arg));
+                    addNoBetPlayer(game.getIndex(arg));
+                    message.channel.send('A game is already in progress in games channel, you will be added to the next game');
+                }
+                
+            });    
+        }
     } else { //check all inputs, logic, and start game
 
         for (const arg of args) { //make sure all arguments are users and those users are guild members

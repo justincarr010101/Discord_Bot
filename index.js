@@ -80,6 +80,8 @@ const loadAdminCommands = (dir) => {
     const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
         const command = require(`${dir}/${file}`);
+
+        //client.command.delete
         client.adminCommands.set(command.name, command);
         console.log(`Loaded admin command: ${command.name}`);
     }
@@ -89,7 +91,6 @@ const loadAdminCommands = (dir) => {
 loadCommands('./commands/Currency_Commands');
 loadCommands('./commands/music_commands');
 loadCommands('./commands/random_Commands');
-loadCommands('./commands/admin_commands');
 loadAdminCommands('./commands/admin_commands');
 loadCommands('./commands/games');
 
@@ -99,8 +100,6 @@ client.on('messageCreate', async message => {
 
     const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
     const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
-
-    if (!client.commands.has(commandName)) return; // Check commands collection for command said
 
     let argsUsername = [];
     const guild = message.guild;

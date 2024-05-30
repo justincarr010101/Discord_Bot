@@ -55,7 +55,9 @@ class BlackjackGame {
     getPlayer(playerId){
         return this.players.find(player => player.id === playerId);
     }
-
+    getIndex(playerId){
+        return this.players.findIndex(player => player.id === playerId);
+    }
     addPlayer(message, playerId) {
         const player = new Player(message, playerId);
         this.players.push(player);
@@ -165,6 +167,7 @@ class BlackjackGame {
             this.players.forEach(player => this.dealCard(player));
             this.dealCard(this.dealer);
         }
+        
 
         let von;
 
@@ -225,7 +228,6 @@ class BlackjackGame {
             });
         });
     }
-
     async playerTurn() {
         
         //set skipPlayer bolean so we can skip players sitting out in this round
@@ -241,20 +243,31 @@ class BlackjackGame {
                 }
             });
         }
+        //get current player
+        
 
+        
         return new Promise(async(resolve, reject) => {
+            const player = this.players[this.currentPlayerIndex];
+
+            //to check if blackjack
+            // if(this.players[this.currentPlayerIndex].getHandValue() == 21 && this.players[this.currentPlayerIndex].hand.length == 2){
+            //     skipPlayer = true;
+            //     this.players[this.currentPlayerIndex].betAmount *= 1.25;
+            //     await this.message.channel.send(`You hit blackjack!\n ${player.id}'s hand: ${player.hand} (${player.getHandValue()})`);
+            //     return resolve(true);
+            // }
 
             if (skipPlayer){
                 skipPlayer = false;
                 return resolve(true);
             }
-
-            //get current player
-            const player = this.players[this.currentPlayerIndex];
-
+            
+            
+    
             //show them the message and ask if they want to hit or stand
             const hitOrStandMessage = await this.message.channel.send({ 
-                content : `Dealers Hand: ${this.getDealerFirstCard()} Choose your action: \n ${player.id}'s hand: ${player.hand}`,
+                content : `Dealers Hand: ${this.getDealerFirstCard()} Choose your action: \n ${player.id}'s hand: ${player.hand} (${player.getHandValue()})` ,
                 components: [hitorstandRow],
             }).then(hitOrStandMessage => hitOrStandMessage); 
             

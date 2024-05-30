@@ -12,6 +12,7 @@ class Player {
         }
         this.bet = 0; // Player's current bet
         this.winings = 0;
+        this.message = message;
     }
 
     addCard(card) {
@@ -20,7 +21,7 @@ class Player {
 
     async updateBalance(message){
         if (this.id !== 'dealer') {
-            this.balance = await execute(message, [this.id]); // Player's balance
+            this.balance = await execute(this.message, [this.id]); // Player's balance
         }
     }
 
