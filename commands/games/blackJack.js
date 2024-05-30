@@ -1,7 +1,7 @@
 //get player and game class
 const { Player } = require('../../blackJackClasses/player.js');
 const { BlackjackGame } = require('../../blackJackClasses/player.js');
-const { getGame, createGame } = require('../../blackJackClasses/gameManager.js');
+const { getGame, createGame, endGameObject } = require('../../blackJackClasses/gameManager.js');
 
 //create variables for managing architecture
 const { Client, GatewayIntentBits, MessageEmbed, EmbedBuilder } = require('discord.js');

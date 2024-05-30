@@ -54,7 +54,9 @@ class Player {
     }
 
     resetHand() {
-        this.hand = [];
+        if (this.hand != []){
+            this.hand = [];
+        }
         this.bet = 0;
     }
 

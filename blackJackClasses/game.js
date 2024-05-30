@@ -1,7 +1,6 @@
 const { ButtonStyle } = require('discord.js');
 const { Player } = require('../blackJackClasses/player.js');
 const { ActionRowBuilder , ButtonBuilder } = require('discord.js');
-const { endGameObject } = require('./gameManager.js');
 
 //set needed variables
 let playerValue;
@@ -33,7 +32,7 @@ const againOrExitRow = new ActionRowBuilder()
     .addComponents(buttonPlay, buttonExit);
 
 class BlackjackGame {
-    constructor(message) {
+    constructor(message, endGameCallback) {
         this.channel = message.channel;
         this.players = []; // Array of Player objects
         this.dealer = new Player(message, 'dealer'); // Create a dealer as a player with a special ID
@@ -42,6 +41,7 @@ class BlackjackGame {
         this.message = message;
         this.sittingOut = [];
         this.started = 0;
+        this.endGameCallback = endGameCallback;
     }
 
     getDealerFirstCard(){
@@ -111,15 +111,17 @@ class BlackjackGame {
             const queueOrExitCollector = againMessage.createMessageComponentCollector({ componentType: 2, time : 30000});
 
             queueOrExitCollector.on('collect', (queueInteraction) => {
-                if (queueInteraction.component.data.id == queueButton.data.id){
-                    queueOrExitCollector.stop();
-                    resolve(true);
-                } else if (queueInteraction.component.data.id === endButton.data.id){
-                    //send message and end game
-                    queueOrExitCollector.stop();
-                    this.message.channel.send('Gamblers always end before they win, see you next time!', true);
-                    resolve(false);
-                } 
+                //if(queueInteraction.user.username == player.id){ 
+                    if (queueInteraction.component.data.id == queueButton.data.id){
+                        queueOrExitCollector.stop();
+                        resolve(true);
+                    } else if (queueInteraction.component.data.id === endButton.data.id){
+                        //send message and end game
+                        queueOrExitCollector.stop();
+                        this.message.channel.send('Gamblers always end before they win, see you next time!', true);
+                        resolve(false);
+                    } 
+                //}
             });
 
             queueOrExitCollector.on('end', ender => {
@@ -139,6 +141,7 @@ class BlackjackGame {
             if (again != true){
                 //endgame
                 this.endGame();
+                return;
             }
         } else {
             this.started = 1;
@@ -152,9 +155,9 @@ class BlackjackGame {
         this.sittingOut = [];
 
         //get each players balance and get their bet 
-        for(const members of this.players){
+        for(const [index, members] of this.players.entries()){
             await members.updateBalance(this.message);
-            await this.makeBet(members, message, this.currentPlayerIndex);
+            await this.makeBet(members, message, index);
         }
 
         //set each players hand
@@ -261,27 +264,29 @@ class BlackjackGame {
             const hitOrStandcollector = hitOrStandMessage.createMessageComponentCollector({ componentType: 2, time: 45000 });
 
             hitOrStandcollector.on('collect', (interaction) => {
-            if (interaction.component.data.id == hitButton.data.id){
-                this.dealCard(player);
-                playerValue = player.getHandValue();
-                console.log("PLAYER VALUE" + playerValue);
-                if (playerValue > 21) {
-                    //go to next player and ask again
-                    this.message.channel.send(`${player.id} BUSTED: ${player.hand}, Value: ${playerValue}`);
-                    this.currentPlayerIndex++;
-                    hitOrStandcollector.stop();
-                    resolve(true);
-                } else {
-                    //ask if player wants to hit or stand again
-                    hitOrStandcollector.stop();
-                    resolve(true);
+                if(interaction.user.username == player.id){ 
+                    if (interaction.component.data.id == hitButton.data.id){
+                        this.dealCard(player);
+                        playerValue = player.getHandValue();
+                        console.log("PLAYER VALUE" + playerValue);
+                        if (playerValue > 21) {
+                            //go to next player and ask again
+                            this.message.channel.send(`${player.id} BUSTED: ${player.hand}, Value: ${playerValue}`);
+                            this.currentPlayerIndex++;
+                            hitOrStandcollector.stop();
+                            resolve(true);
+                        } else {
+                            //ask if player wants to hit or stand again
+                            hitOrStandcollector.stop();
+                            resolve(true);
+                        }
+                    }else if (interaction.component.data.id == standButton.data.id){
+                        //if player stands then tell them they stood and go next 
+                        this.currentPlayerIndex++;
+                        hitOrStandcollector.stop();
+                        resolve(true);
+                    }
                 }
-            }else if (interaction.component.data.id == standButton.data.id){
-                //if player stands then tell them they stood and go next 
-                this.currentPlayerIndex++;
-                hitOrStandcollector.stop();
-                resolve(true);
-            }
             });
 
             // Event listener for when the collector ends (due to timeout or reaching the max number of items)
@@ -309,9 +314,9 @@ class BlackjackGame {
             playersHands.push(player.id + " " + player.getHandValue())
         });
 
-        playersHands.forEach(String => {
-            this.message.channel.send(String);
-        });
+        // playersHands.forEach(String => {
+        //     this.message.channel.send(String);
+        // });
 
         //If dealer is below 17 keep hitting there hand
         while (this.dealer.getHandValue() < 17) {
@@ -324,26 +329,28 @@ class BlackjackGame {
         this.message.channel.send(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`)
 
         // Compare dealer hand with each player
-        for (const player of this.players) {
-            const playerValue = player.getHandValue();
-            let result;
+        for (const [index, player ] of this.players.entries()) {
+            if(!this.sittingOut.includes(index)){
+                const playerValue = player.getHandValue();
+                let result;
 
-            if(player.id !== "dealer"){
-                if (playerValue > 21) {
-                    result = `HAHA, ${player.id} busted with ${playerValue}. Dealer wins. You lost: ${player.bet} `;
-                } else if (dealerValue > 21 || playerValue > dealerValue) {
-                    result = `Congrats, ${player.id} wins with ${playerValue} against dealer's ${dealerValue}. You win: ${player.bet}`;
-                    player.winBet();
-                } else if (playerValue < dealerValue) {
-                    result = `Player ${player.id} loses with ${playerValue} against dealer's ${dealerValue}. You lost: ${player.bet}`;
-                    
-                } else {
-                    result = `Player ${player.id} ties with dealer at ${playerValue}. No loses`;
-                    player.tieBet();
+                if(player.id !== "dealer"){
+                    if (playerValue > 21) {
+                        result = `HAHA, ${player.id} busted with ${playerValue}. Dealer wins. You lost: ${player.bet} `;
+                    } else if (dealerValue > 21 || playerValue > dealerValue) {
+                        result = `Congrats, ${player.id} wins with ${playerValue} against dealer's ${dealerValue}. You win: ${player.bet}`;
+                        player.winBet();
+                    } else if (playerValue < dealerValue) {
+                        result = `Player ${player.id} loses with ${playerValue} against dealer's ${dealerValue}. You lost: ${player.bet}`;
+                    } else {
+                        result = `Player ${player.id} ties with dealer at ${playerValue}. No loses`;
+                        player.tieBet();
+                    }
+                    await this.message.channel.send(result);
                 }
-                await this.message.channel.send(result);
             }
         }
+        this.giveWinnings();
     }
 
     //update database with players winnings or loses
@@ -364,18 +371,18 @@ class BlackjackGame {
         } else {
             try {
                 //clear player hands of this.game
-                this.players.forEach(player => {
-                    player.resetHand();
-                });
-                //reset dealer hand
-                this.dealer.resetHand();
+                // this.players.forEach(player => {
+                //     player.resetHand();
+                // });
+                // //reset dealer hand
+                // this.dealer.resetHand();
                 //clear player references
                 this.players = [];
                 this.dealer = null;
                 this.sittingOut = null;
                 //remove game instance reference
                 if(this !== 'undefined'){
-                    endGameObject();
+                    this.endGameCallback(); //endGameObject()
                 }
                 console.log("Game and players have been cleaned up.");
             } catch(e) {

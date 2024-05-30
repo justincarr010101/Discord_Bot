@@ -6,7 +6,7 @@ let currentGame = null;
 
 //create game
 function createGame(message) {
-    currentGame = new BlackjackGame(message);
+    currentGame = new BlackjackGame(message, endGameObject);
     return currentGame;
 }
 
@@ -17,7 +17,7 @@ function getGame() {
 
 //end game
 function endGameObject() {
-    if (currentGame) {
+    if (currentGame !== null) {
         currentGame = null;
     }
 }
