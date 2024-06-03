@@ -1,6 +1,7 @@
 //get player and game class
 const { Player } = require('../../blackJackClasses/player.js');
-const { BlackjackGame } = require('../../blackJackClasses/player.js');
+const { ex } = require('./embededMessage.js');
+const { BlackjackGame } = require('../../blackJackClasses/game.js');
 const { getGame, createGame, endGameObject } = require('../../blackJackClasses/gameManager.js');
 
 //create variables for managing architecture
@@ -31,7 +32,7 @@ function execute(message, args){
                 }else{
                     game.addPlayer(message, arg);
                     console.log(game.getIndex(arg));
-                    addNoBetPlayer(game.getIndex(arg));
+                    game.addNoBetPlayer(game.getIndex(arg));
                     message.channel.send('A game is already in progress in games channel, you will be added to the next game');
                 }
                 

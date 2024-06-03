@@ -22,9 +22,28 @@ async function execute(message, args) {
     });
 };
 
+async function returnBalance(message, args) {
+
+    // Check if username argument is provided
+    if (!args[0]) {
+        return;
+    }
+    // Fetch balance from the database
+    return db2.query('SELECT balance FROM members WHERE Username = $1', [args[0]])
+    .then(result => {
+        console.log('Query result:', result);
+        return result[0].balance;
+    })
+    .catch(err => {
+        console.error('Error in main function:', err.message);
+        message.channel.send(`User: ${args[0]}, is not in the database.`);
+    });
+};
+
 // getBalance.js
 module.exports = {
     name: 'balance',
     description: 'Check your balance',
     execute,
+    returnBalance
 };

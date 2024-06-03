@@ -68,11 +68,7 @@ async function initDatabase() {
         client = new Client({
             connectionString: process.env.DATABASE_URL,
             ssl: false,
-<<<<<<< HEAD
-            password: "",
-=======
             password: '',
->>>>>>> 9843383 (pushing so someone can check the error)
             user: "postgres"
         });
         await client.connect();

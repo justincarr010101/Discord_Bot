@@ -3,7 +3,8 @@ const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const db2 = require('./db.js');
 const db = db2.getDB();
-const http = require('http');
+// const http = require('http');
+const express =  require('express');
 const admins = ["justincarr", "meatbails", "quickphix."];
 const client = new Client({
      intents: [
@@ -163,9 +164,21 @@ client.once('ready', () => {
 //for heroku to be happy
 const PORT = process.env.PORT || 3000;
 
-http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Hello from the Discord bot!\n');
-}).listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// http.createServer((req, res) => {
+//     res.writeHead(200, { 'Content-Type': 'text/plain' });
+//     res.end('Hello from the Discord bot!\n');
+// }).listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+// });
+
+
+const app = express();
+app.use('/pictures', express.static('BlackJackImage'));
+
+app.get('/', (req, res) => {
+    //res.send('Hello from the Discord bot!\n');
+    res.sendFile('commands/games/pokertable.html', { root: __dirname });
 });
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});  

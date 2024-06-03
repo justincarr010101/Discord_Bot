@@ -1,35 +1,30 @@
-const { ButtonStyle } = require('discord.js');
+const { returnBalance } = require('../commands/Currency_Commands/getBalance.js');
 const { Player } = require('../blackJackClasses/player.js');
-const { ActionRowBuilder , ButtonBuilder } = require('discord.js');
-
-//set needed variables
-let playerValue;
-let playersHands = [];
-
-//set hit or stand buttons
-const buttonHit = new ButtonBuilder()
-    .setStyle(ButtonStyle.Success)
-    .setLabel('Hit')
-    .setCustomId('hit');
-const buttonStand = new ButtonBuilder()
-    .setStyle(ButtonStyle.Danger)
-    .setLabel('Stand')
-    .setCustomId('stand');
-//create row for presenting the buttons
-const hitorstandRow = new ActionRowBuilder()
-    .addComponents(buttonHit, buttonStand);
-//play again or not buttons
-const buttonPlay = new ButtonBuilder()
-    .setStyle(ButtonStyle.Success)
-    .setLabel('Run it')
-    .setCustomId('Run it');
-const buttonExit = new ButtonBuilder()
-    .setStyle(ButtonStyle.Danger)
-    .setLabel('End')
-    .setCustomId('End');
-//create row for presenting the buttons
-const againOrExitRow = new ActionRowBuilder()
-    .addComponents(buttonPlay, buttonExit);
+const { takepicture } = require("../commands/games/pokertable.js");
+require('dotenv').config();
+process.env.TOKEN
+const { executeEmbed,
+    editEmbedDescription,
+    createEndOrAgainRow,
+    createHitOrStandRow,
+    createInputField, 
+    startButton, 
+    editEmbedField,
+    createBetButton,
+    addPlayersValue,
+    endingEmbedFieldwithString } = require('../commands/games/embededMessage.js');
+const { Client , MessageEmbed , GatewayIntentBits, ComponentAssertions, InteractionType } = require('discord.js');
+const client = new Client({
+    intents: [
+       GatewayIntentBits.Guilds,
+       GatewayIntentBits.GuildMessages, 
+       GatewayIntentBits.GuildMembers,
+       GatewayIntentBits.GuildPresences,
+       GatewayIntentBits.MessageContent,
+       GatewayIntentBits.GuildVoiceStates] })
+const axios = require('axios');
+let currentEmbeddedMessage;
+let currentBet;
 
 class BlackjackGame {
     constructor(message, endGameCallback) {
@@ -42,6 +37,12 @@ class BlackjackGame {
         this.sittingOut = [];
         this.started = 0;
         this.endGameCallback = endGameCallback;
+        this.embedInstance = executeEmbed();
+        this.hitorStandRow = createHitOrStandRow() 
+        this.EndorAgainRow = createEndOrAgainRow()
+        this.startButton = startButton();
+        this.betButton = createBetButton()
+        this.modal = createInputField();
     }
 
     getDealerFirstCard(){
@@ -55,9 +56,11 @@ class BlackjackGame {
     getPlayer(playerId){
         return this.players.find(player => player.id === playerId);
     }
+
     getIndex(playerId){
         return this.players.findIndex(player => player.id === playerId);
     }
+
     addPlayer(message, playerId) {
         const player = new Player(message, playerId);
         this.players.push(player);
@@ -72,7 +75,7 @@ class BlackjackGame {
     }
 
     createDeck() {
-        const suits = ['♠', '♣', '♦', '♥'];
+        const suits = ['S', 'C', 'D', 'H'];
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         this.deck = [];
 
@@ -99,25 +102,50 @@ class BlackjackGame {
         player.addCard(card);
     }
 
+    async getStartInteraction(){
+
+        //get button Interaction from start button and start the betting
+        return new Promise(async(resolve) => {
+            // Create a message collector with the specified filter and a time limit of 30 seconds
+            const startButtonCollector = this.channel.createMessageComponentCollector({ time: 60000 });
+
+            // Event listener for when a message is collected
+            startButtonCollector.on('collect', async (interaction) => {
+                if(this.players.some(player => player.id === interaction.user.username)){ 
+                    if (interaction.component.data.custom_id == 'Start'){
+                        // get each players balance and get their bet 
+                        startButtonCollector.stop();
+                        resolve(true)
+                    }
+                } else {
+                    this.embedInstance = editEmbedDescription(this.embedInstance , `Must be a player to start the game`);
+                    await currentEmbeddedMessage.edit({ embeds: [this.embedInstance]});
+                }
+            })
+
+            // Event listener for when the collector ends (due to timeout)
+            startButtonCollector.on('end', async (collected) => {
+                if (startButtonCollector.endReason == 'time'){
+                    //no current players started the game
+                    resolve(false)
+                } 
+            });
+        });
+    }
+
     async playAgain(){
-        //show them the message and ask if they want to hit or stand
-        const againMessage = await this.message.channel.send({ 
-            content : `Queue Again?`,
-            components: [againOrExitRow],
-        }).then(againMessage => againMessage); 
-        
-        let queueButton = againMessage.components[0].components[0];
-        let endButton = againMessage.components[0].components[1];
+
+        await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.EndorAgainRow]});
 
         return new Promise((resolve, reject) => {
-            const queueOrExitCollector = againMessage.createMessageComponentCollector({ componentType: 2, time : 30000});
+            const queueOrExitCollector = currentEmbeddedMessage.createMessageComponentCollector({ componentType: 2, time : 30000});
 
             queueOrExitCollector.on('collect', (queueInteraction) => {
                 //if(queueInteraction.user.username == player.id){ 
-                    if (queueInteraction.component.data.id == queueButton.data.id){
+                    if (queueInteraction.component.data.custom_id == 'again'){
                         queueOrExitCollector.stop();
                         resolve(true);
-                    } else if (queueInteraction.component.data.id === endButton.data.id){
+                    } else if (queueInteraction.component.data.id === 'end'){
                         //send message and end game
                         queueOrExitCollector.stop();
                         this.message.channel.send('Gamblers always end before they win, see you next time!', true);
@@ -133,7 +161,37 @@ class BlackjackGame {
                     resolve(false);
                 } 
             });
-        });         
+        });
+    }
+
+    async getModalSubmission(Interaction){
+        currentBet = 0;
+        console.log("here");
+        return new Promise(async (resolve) => {
+            const submitted = await Interaction.awaitModalSubmit({
+                time: 20000,
+            })
+
+            if (submitted) {
+                let player = this.players[this.currentPlayerIndex] 
+                let betAmount = submitted.fields.getTextInputValue('betAmount');
+                await submitted.deferUpdate();
+                currentBet = await this.checkPlayerBet(betAmount, player );
+                player.bet = betAmount;
+                resolve(true);
+            } else {
+                this.addNoBetPlayer(this.currentPlayerIndex);
+            }
+        });
+        
+    }
+
+    async checkPlayerBet(betAmount, player){
+        if(player.balance >= betAmount && betAmount > 0){
+            player.bet = betAmount;
+        } else {
+            this.addNoBetPlayer(this.currentPlayerIndex);
+        }
     }
 
     async startGame(message) {
@@ -149,17 +207,35 @@ class BlackjackGame {
             this.started = 1;
         }
 
-        console.log("HERE");
         this.players.forEach(player => player.resetHand());
         this.dealer.resetHand();
         this.resetNoBetPlayers();
         this.currentPlayerIndex = 0;
         this.sittingOut = [];
 
-        //get each players balance and get their bet 
-        for(const [index, members] of this.players.entries()){
-            await members.updateBalance(this.message);
-            await this.makeBet(members, message, index);
+        //set the embed with the current players for the field 
+        editEmbedField(this.embedInstance, this.players);
+
+        // Send the welcome Embed
+        if(currentEmbeddedMessage == null){
+            currentEmbeddedMessage = await message.channel.send({ embeds: [this.embedInstance] , components : [this.startButton]});
+        } else {
+            await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.startButton]});
+        }
+       
+        let startOrNotFlag = await this.getStartInteraction(this.players)
+        if (startOrNotFlag){
+            for(const [index, members] of this.players.entries()){
+                await members.updateBalance(this.message);
+                let check = await this.makeBet(members, index);
+                if (check) {
+                    let check2 = await this.getModalSubmission(check);
+                }
+            }
+        } else {
+            //No one started the game so end the game and clear everything
+            message.channel.send("Game Ended due to timeout");
+            this.endGame();
         }
 
         //set each players hand
@@ -167,10 +243,27 @@ class BlackjackGame {
             this.players.forEach(player => this.dealCard(player));
             this.dealCard(this.dealer);
         }
-        
+
+        //change embed to have player values
+        this.embedInstace = addPlayersValue(this.embedInstance, this.players);
+        await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.startButton]});
+    
+        this.sittingOut.forEach(integer => { //loop through sitting out and check if it holds the index of the current player.
+            this.players[this.currentPlayerIndex].hand = ['1B', '1B'];
+        })
+        //load picture
+
+        //{dealer: {dealerObject}, player1:{playerObject}, player2:{playerObject})
+        let tableplayers = {}
+
+        for (const [index, player ] of this.players.entries()){
+            tableplayers[`player${index+1}`] = player;
+        }
+        tableplayers.dealer = this.dealer;
+
+        let gameURL = await takepicture(message,tableplayers);
 
         let von;
-
         do {
             von = await this.playerTurn().then(x => x);
         } while (von);
@@ -179,55 +272,42 @@ class BlackjackGame {
         this.startGame();
     }
 
-    async makeBet(player, message, playerIndex) {
-    
-        // Send a message prompting the player to enter their bet
-        await this.channel.send(`${player.id}, please enter your bet:`);
+    async makeBet(player , playerIndex) {
+
+        // Edit the current embed and then edit the message with the updated embed
+        this.embedInstance = editEmbedDescription(this.embedInstance , `${player.id} enter your bet.`);
+        await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.betButton] }); // , components : [this.betButton]
 
         return new Promise((resolve) => {
-            // Define a filter to ensure only the player's response is collected and it meets the criteria
-            const filter = response => {
-                if (response.author.username === player.id){
-                    return response.author.username === player.id;
-                }
-            }; 
-    
             // Create a message collector with the specified filter and a time limit of 30 seconds
-            const currentPlayerCollector = this.channel.createMessageCollector({ filter, time: 30000, max: 1 });
+            const betButtonCollector = this.channel.createMessageComponentCollector({ time: 20000 });
 
             // Event listener for when a message is collected
-            currentPlayerCollector.on('collect', response => {
-                //get the value from response
-                const betAmount = parseInt(response); 
-                console.log(betAmount);
-                console.log(player.balance);
-                if (player.balance >= betAmount && betAmount > 0){
-                    console.log(player.balance);
-                    player.placeBet(betAmount);
-                    this.channel.send(`${player.id} has placed a bet of ${betAmount} chips.`);
-                    currentPlayerCollector.stop();
-                    resolve(betAmount);  // Resolve the promise when the bet is placed
-                } else {
-                    this.channel.send(`invalid bet ammount: ${betAmount}`);
-                    currentPlayerCollector.stop();
-                    this.addNoBetPlayer(playerIndex);
-                    resolve(betAmount);  // Resolve the promise when the bet is placed
+            betButtonCollector.on('collect', async (betButtonInteraction) => {
+                if(betButtonInteraction.user.username == player.id){ 
+                    if (betButtonInteraction.component.data.custom_id == 'Bet'){
+                        // Show the modal to the user
+                        try{
+                            await betButtonInteraction.showModal(this.modal);
+                        }catch(e){
+                            console.log(e);
+                        }
+                        betButtonCollector.stop();
+                        resolve(betButtonInteraction);
+                    }
                 }
             });
     
             // Event listener for when the collector ends (due to timeout or reaching the max number of items)
-            currentPlayerCollector.on('end', collected => {
-                if (currentPlayerCollector.endReason == 'time'){
-                    if (collected.size === 0) {
-                        // Handle the case where the player did not respond within the time limit
-                        this.channel.send(`${player.id}, you did not enter a valid bet within the time limit, you will miss this round.`);
-                        this.addNoBetPlayer(playerIndex);
-                        resolve();  // Resolve the promise even if the player didn't place a bet
-                    } 
+            betButtonCollector.on('end', collected => {
+                if (betButtonCollector.endReason == 'time'){
+                    this.addNoBetPlayer(playerIndex);
+                    resolve(false)
                 } 
             });
         });
     }
+
     async playerTurn() {
         
         //set skipPlayer bolean so we can skip players sitting out in this round
@@ -245,8 +325,8 @@ class BlackjackGame {
         }
         //get current player
         
+        //get picture
 
-        
         return new Promise(async(resolve, reject) => {
             const player = this.players[this.currentPlayerIndex];
 
@@ -263,38 +343,35 @@ class BlackjackGame {
                 return resolve(true);
             }
             
-            
-    
-            //show them the message and ask if they want to hit or stand
-            const hitOrStandMessage = await this.message.channel.send({ 
-                content : `Dealers Hand: ${this.getDealerFirstCard()} Choose your action: \n ${player.id}'s hand: ${player.hand} (${player.getHandValue()})` ,
-                components: [hitorstandRow],
-            }).then(hitOrStandMessage => hitOrStandMessage); 
-            
-            let hitButton = hitOrStandMessage.components[0].components[0];
-            let standButton = hitOrStandMessage.components[0].components[1];
+            // Edit the current embed and then edit the message with the updated embed
+            this.embedInstance = editEmbedDescription(this.embedInstance , `${player.id} Hit or Stand?`);
+            let hitOrStandMessage = await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
 
             const hitOrStandcollector = hitOrStandMessage.createMessageComponentCollector({ componentType: 2, time: 45000 });
 
-            hitOrStandcollector.on('collect', (interaction) => {
-                if(interaction.user.username == player.id){ 
-                    if (interaction.component.data.id == hitButton.data.id){
+            hitOrStandcollector.on('collect', async(hitorStandInteraction) => {
+                if(hitorStandInteraction.user.username == player.id){ 
+                    if (hitorStandInteraction.component.data.custom_id == 'hit'){
                         this.dealCard(player);
-                        playerValue = player.getHandValue();
+                        let playerValue = player.getHandValue();
                         console.log("PLAYER VALUE" + playerValue);
                         if (playerValue > 21) {
                             //go to next player and ask again
-                            this.message.channel.send(`${player.id} BUSTED: ${player.hand}, Value: ${playerValue}`);
+                            this.embedInstance = addPlayersValue(this.embedInstance , this.players);
+                            await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
                             this.currentPlayerIndex++;
                             hitOrStandcollector.stop();
                             resolve(true);
                         } else {
                             //ask if player wants to hit or stand again
+                            // Edit the current embed and then edit the message with the updated embed
+                            this.embedInstance = addPlayersValue(this.embedInstance , this.players);
+                            await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
                             hitOrStandcollector.stop();
                             resolve(true);
                         }
-                    }else if (interaction.component.data.id == standButton.data.id){
-                        //if player stands then tell them they stood and go next 
+                    }else if (hitorStandInteraction.component.data.custom_id == 'stand'){
+                        //if player stands then tell them they stood and go next
                         this.currentPlayerIndex++;
                         hitOrStandcollector.stop();
                         resolve(true);
@@ -307,7 +384,7 @@ class BlackjackGame {
                 if(hitOrStandcollector == 'time'){
                     if (collected.size === 0) {
                         // Handle the case where the player did not respond within the time limit
-                        this.channel.send(`${player.id}, Time limit reached, forcing stand;`);
+                        //this.channel.send(`${player.id}, Time limit reached, forcing stand;`);
                         this.currentPlayerIndex++;
                         resolve(true);  // Resolve the promise even if the player didn't place a bet
                     } 
@@ -323,9 +400,9 @@ class BlackjackGame {
         }
 
         //show all players Hands before flipping last dealer card
-        this.players.forEach(player => {
-            playersHands.push(player.id + " " + player.getHandValue())
-        });
+        // this.players.forEach(player => {
+        //     playersHands.push(player.id + " " + player.getHandValue())
+        // });
 
         // playersHands.forEach(String => {
         //     this.message.channel.send(String);
@@ -334,12 +411,13 @@ class BlackjackGame {
         //If dealer is below 17 keep hitting there hand
         while (this.dealer.getHandValue() < 17) {
             this.dealCard(this.dealer);
-            this.message.channel.send(`Dealer flips a: ${this.getDealerLastCard()}`);
+            // this.message.channel.send(`Dealer flips a: ${this.getDealerLastCard()}`);
+            console.log(`Dealer flips a: ${this.getDealerLastCard()}`)
         }
 
         //get dealer value, send it, and compare with each players value
         const dealerValue = this.dealer.getHandValue();
-        this.message.channel.send(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`)
+        console.log(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`)
 
         // Compare dealer hand with each player
         for (const [index, player ] of this.players.entries()) {
@@ -367,15 +445,24 @@ class BlackjackGame {
     }
 
     //update database with players winnings or loses
-    giveWinnings(){
-        this.players.forEach(player => {
-            player.updateDatabaseBalance();
+    async giveWinnings(){
+        let UpdateString='';
+        this.players.forEach(async player => {
+            await player.updateDatabaseBalance();
         });
+        this.players.forEach(async player => {
+            UpdateString += `${player.id}: new balance is ${await returnBalance(this.message , [player.id])} `;
+        })
+        this.embedInstance = endingEmbedFieldwithString(this.embedInstance , UpdateString);
+        await currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
     }
 
     async endGame(){
 
         this.giveWinnings();
+
+        //might not work 
+        //await currentEmbeddedMessage.delete();
 
         //check if game is a game
         if(this == 'undefined'){

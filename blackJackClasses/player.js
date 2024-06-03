@@ -2,6 +2,7 @@ const { Client, Intents, GatewayIntentBits } = require('discord.js');
 const { execute } = require('../commands/Currency_Commands/getBalance.js');
 const { setMemberBalance } = require('../db.js');
 
+
 //player class for each player
 class Player {
     constructor(message, id) {
