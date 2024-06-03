@@ -26,12 +26,15 @@ async function returnBalance(message, args) {
 
     // Check if username argument is provided
     if (!args[0]) {
+        message.channel.send("Please provide a username.");
         return;
     }
     // Fetch balance from the database
     return db2.query('SELECT balance FROM members WHERE Username = $1', [args[0]])
     .then(result => {
         console.log('Query result:', result);
+        
+        //message.channel.send(`${args[0]} balance is: ${result[0].balance}`);
         return result[0].balance;
     })
     .catch(err => {

@@ -1,13 +1,7 @@
 //get player and game class
 const { Player } = require('../../blackJackClasses/player.js');
-const { ex } = require('./embededMessage.js');
 const { BlackjackGame } = require('../../blackJackClasses/game.js');
 const { getGame, createGame, endGameObject } = require('../../blackJackClasses/gameManager.js');
-
-//create variables for managing architecture
-const { Client, GatewayIntentBits, MessageEmbed, EmbedBuilder } = require('discord.js');
-const getBalance = require('../Currency_Commands/getBalance');
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 let gamesChannel = '';
 
 //execute function called from export

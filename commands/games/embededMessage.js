@@ -6,6 +6,7 @@ const { ActionRowBuilder ,
     EmbedBuilder,
     TextInputStyle } = require('discord.js');
 const { getHandValue } = require('../../blackJackClasses/player');
+const { returnBalance } = require('../Currency_Commands/getBalance.js');
 
 
 function executeEmbed(){
@@ -14,7 +15,9 @@ function executeEmbed(){
         .setTitle("BlackJack")
         .setImage('https://img.freepik.com/free-vector/shining-circle-purple-lighting-isolated-dark-background_1441-2396.jpg?size=626&ext=jpg&ga=GA1.1.966395822.1715801130&semt=sph')
         .setDescription('Welcome Players')
-        .setFields({ name: 'Players' , value: 'players'})
+        .setFields({ name: 'Players' , value: 'players'},
+        { name : 'Balance' , value : 'Balances'}
+        )
         
     return embed;
 }
@@ -24,30 +27,36 @@ function editEmbedDescription(embed, string){
     return newEmbed
 }
 
-function editEmbedField(embed, players){
+async function editEmbedField(embed, players, message4Embed){
     let valueString = '';
-    let i = 1;
-    players.forEach(player => {
-        valueString += `P${i}: ${player.id} \n`;
-        i++;
-    });
-    embed.setFields({name : 'Players' , value: valueString});
-    return embed
-}
+    let balance;
+    let balanceString;
 
-function endingEmbedFieldwithString(embed, string){
-    embed.setFields({name : 'Players' , value: string});
+    for (let i = 0; i < players.length; i++){
+        valueString += `P${i+1}: ${players[i].id} \n`;
+        balance = await returnBalance(message4Embed , [players[i].id])
+        players[i].balance = balance;
+        console.log(balance);
+        if (balance >= 1000) {
+            balanceString = (balance / 1000).toFixed(2) + "k" + '\n';
+        } else {
+            balanceString = balance.toString() + '\n';
+        }
+    }
+    embed.setFields({name : 'Players' , value: valueString} , { name : 'Balances' , value : balanceString});
     return embed
 }
 
 function addPlayersValue(embed, players){
     let valueString = '';
     let i = 1;
+    let betString = '';
     players.forEach(player => {
         valueString += `P${i}: ${player.id} (${player.getHandValue()})\n`;
+        betString += `P${i}: ${player.bet}\n`
         i++;
     });
-    embed.setFields({name : 'Players' , value: valueString});
+    embed.setFields({name : 'Players' , value: valueString} , { name : 'Bets' , value : betString});
     return embed
 }
 
@@ -135,6 +144,5 @@ module.exports = {
     startButton,
     createBetButton,
     editEmbedField,
-    addPlayersValue,
-    endingEmbedFieldwithString
+    addPlayersValue
 };

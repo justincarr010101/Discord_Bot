@@ -1,7 +1,5 @@
-const { Client, Intents, GatewayIntentBits } = require('discord.js');
-const { execute } = require('../commands/Currency_Commands/getBalance.js');
+const { returnBalance } = require('../commands/Currency_Commands/getBalance.js');
 const { setMemberBalance } = require('../db.js');
-
 
 //player class for each player
 class Player {
@@ -22,7 +20,7 @@ class Player {
 
     async updateBalance(message){
         if (this.id !== 'dealer') {
-            this.balance = await execute(this.message, [this.id]); // Player's balance
+            this.balance = await returnBalance(this.message, [this.id]); // Player's balance
         }
     }
 
