@@ -4,16 +4,18 @@ const { ActionRowBuilder ,
     TextInputBuilder , 
     ModalBuilder ,  
     EmbedBuilder,
-    TextInputStyle } = require('discord.js');
+    TextInputStyle,
+    AttachmentBuilder } = require('discord.js');
 const { getHandValue } = require('../../blackJackClasses/player');
 const { returnBalance } = require('../Currency_Commands/getBalance.js');
 
 
 function executeEmbed(){
     //make the EmbedMessage
+    
     const embed = new EmbedBuilder()
         .setTitle("BlackJack")
-        .setImage('https://img.freepik.com/free-vector/shining-circle-purple-lighting-isolated-dark-background_1441-2396.jpg?size=626&ext=jpg&ga=GA1.1.966395822.1715801130&semt=sph')
+        .setImage('https://media.istockphoto.com/id/1147481668/vector/black-jack-table-vector-illustration-eps-10-casino.jpg?s=612x612&w=0&k=20&c=SgTDJ-Pv90ZOAUW853CY04Nltn0rVXM1esgD7MQniRw=')
         .setDescription('Welcome Players')
         .setFields({ name: 'Players' , value: 'players'},
         { name : 'Balance' , value : 'Balances'}
@@ -22,8 +24,16 @@ function executeEmbed(){
     return embed;
 }
 
+function createImageAttachment(){
+    return new AttachmentBuilder('./BlackJackImage/table.jpeg');
+}
+
+function updateImageAttachment(attachment){
+    return attachment.setFile('./BlackJackImage/table.jpeg');
+}
+
 function editEmbedDescription(embed, string){
-    const newEmbed = EmbedBuilder.from(embed).setDescription(string);
+    const newEmbed = embed.setDescription(string);
     return newEmbed
 }
 
@@ -144,5 +154,7 @@ module.exports = {
     startButton,
     createBetButton,
     editEmbedField,
-    addPlayersValue
+    addPlayersValue,
+    createImageAttachment,
+    updateImageAttachment
 };

@@ -10,8 +10,11 @@ const { executeEmbed,
     startButton, 
     editEmbedField,
     createBetButton,
-    addPlayersValue } = require('../commands/games/embededMessage.js');
+    addPlayersValue,
+    createImageAttachment,
+    updateImageAttachment } = require('../commands/games/embededMessage.js');
 let currentBet = 0;
+let dealerFlipHolder = '';
 
 class BlackjackGame {
     constructor(message, endGameCallback) {
@@ -24,6 +27,7 @@ class BlackjackGame {
         this.results = '';
         this.sittingOut = [];
         this.started = 0;
+        this.currentImageAttachment = createImageAttachment();
         this.endGameCallback = endGameCallback;
         this.embedInstance = executeEmbed();
         this.hitorStandRow = createHitOrStandRow() 
@@ -109,7 +113,7 @@ class BlackjackGame {
                     }
                 } else {
                     this.embedInstance = editEmbedDescription(this.embedInstance , `Must be a player to start the game`);
-                    await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance]});
+                    await this.currentEmbeddedMessage.setDescription( `Must be a player to start the game`);
                 }
             })
 
@@ -241,21 +245,20 @@ class BlackjackGame {
         //change embed to have player values and bet 
         this.embedInstace = addPlayersValue(this.embedInstance, this.players);
         await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.startButton]});
-    
-        this.sittingOut.forEach(integer => { //loop through sitting out and check if it holds the index of the current player.
-            this.players[this.currentPlayerIndex].hand = ['1B', '1B'];
-        })
-        //load picture
+        
+        for (let i = 0; i < this.players.length;  i++){
+            if (this.sittingOut.includes(i)) {
+                this.players[i].hand = ['1B', '1B'];
+            }
+        }
 
         //{dealer: {dealerObject}, player1:{playerObject}, player2:{playerObject})
         let tableplayers = {}
-
-        for (const [index, player ] of this.players.entries()){
-            tableplayers[`player${index+1}`] = player;
-        }
-        tableplayers.dealer = this.dealer;
-
-        let gameURL = await takepicture(message,tableplayers);
+        tableplayers = this.players.map(player => player.hand);
+        dealerFlipHolder = this.dealer.hand[1];
+        this.dealer.hand[1] = '1B';
+        tableplayers.push(this.dealer.hand);
+        await takepicture(tableplayers);
 
         let von;
         do {
@@ -302,6 +305,14 @@ class BlackjackGame {
         });
     }
 
+    async newPhoto(){
+        let tableplayers = {}
+        let hold;
+        tableplayers = this.players.map(player => player.hand);
+        tableplayers.push(this.dealer.hand);
+        return await takepicture(tableplayers);
+    }
+
     async playerTurn() {
         
         //set skipPlayer bolean so we can skip players sitting out in this round
@@ -328,7 +339,8 @@ class BlackjackGame {
             
             // Edit the current embed and then edit the message with the updated embed
             this.embedInstance = editEmbedDescription(this.embedInstance , `${player.id} Hit or Stand?`);
-            let hitOrStandMessage = await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
+            this.embedInstance.setImage('attachment://table.jpeg');
+            let hitOrStandMessage = await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] , files : [this.currentImageAttachment] });
 
             const hitOrStandcollector = hitOrStandMessage.createMessageComponentCollector({ componentType: 2, time: 30000 });
 
@@ -337,22 +349,18 @@ class BlackjackGame {
                     if (hitorStandInteraction.component.data.custom_id == 'hit'){
                         this.dealCard(player);
                         /* ADD CARD TO PLAYERS HAND ON TABLE IMAGE AND RELOAD URL?*/
+                        await this.newPhoto();
+                        this.currentImageAttachment = await updateImageAttachment(this.currentImageAttachment);
                         let playerValue = player.getHandValue();
+                        this.embedInstance = await addPlayersValue(this.embedInstance , this.players);
+                        await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
                         if (playerValue > 21) {
                             //go to next player and ask again
-                            this.embedInstance = addPlayersValue(this.embedInstance , this.players);
-                            await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
                             this.currentPlayerIndex++;
-                            hitorStandInteraction.deferUpdate();
-                            hitOrStandcollector.stop();
-                            resolve(true);
-                        } else {
-                            this.embedInstance = addPlayersValue(this.embedInstance , this.players);
-                            await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [this.hitorStandRow] });
-                            hitorStandInteraction.deferUpdate();
-                            hitOrStandcollector.stop();
-                            resolve(true);
-                        }
+                        } 
+                        hitorStandInteraction.deferUpdate();
+                        hitOrStandcollector.stop();
+                        resolve(true);
                     }else if (hitorStandInteraction.component.data.custom_id == 'stand'){
                         //if player stands then tell them they stood and go next
                         this.currentPlayerIndex++;
@@ -378,21 +386,24 @@ class BlackjackGame {
     async dealerTurn() {
 
         if(this.sittingOut.length == this.players.length){ //if all players sitting out then just ask if they wanna play again
+            console.log("Sitting out error");
             return;
+
         }
 
         /* FLIP DEALERS SECOND CARD OVER AND RELOAD URL?*/
-
+        this.dealer.hand[1] = dealerFlipHolder;
+        await this.newPhoto();
+        this.currentImageAttachment = await updateImageAttachment(this.currentImageAttachment);
+        await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [] , files : [this.currentImageAttachment] });
         //If dealer is below 17 keep hitting there hand
         while (this.dealer.getHandValue() < 17) {
             this.dealCard(this.dealer);
-            console.log(`Dealer flips a: ${this.getDealerLastCard()}`)
-            /* ADD CARD TO DEALERS HAND ON TABLE AND RELOAD URL?*/
         }
 
         //get dealer value, send it, and compare with each players value
         const dealerValue = this.dealer.getHandValue();
-        console.log(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`)
+        //console.log(`Dealer's Hand: ${this.dealer.hand.join(', ')} (Value: ${dealerValue})`)
 
         // Compare dealer hand with each player
         this.results = '';
@@ -416,7 +427,9 @@ class BlackjackGame {
                         player.tieBet();
                     }
                     this.embedInstance.setDescription(this.results);
-                    await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] });
+                    await this.newPhoto();
+                    this.currentImageAttachment = await updateImageAttachment(this.currentImageAttachment);
+                    await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [] , files : [this.currentImageAttachment] });
                 }
             }
         }
