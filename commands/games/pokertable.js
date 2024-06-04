@@ -28,6 +28,7 @@ async function generateImage(_htmlTemplate){
     output: './BlackJackImage/table.jpeg',
     type: 'jpeg',
     puppeteerArgs: {
+      executablePath: './.cache/puppeteer/chromium/Linux-*/chrome',
       //executablePath: process.env.PUPPETEER_EXECUTABLE_PATH? process.env.PUPPETEER_EXECUTABLE_PATH : false,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       headless: true
