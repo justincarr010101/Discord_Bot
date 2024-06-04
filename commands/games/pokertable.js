@@ -28,8 +28,9 @@ async function generateImage(_htmlTemplate){
     output: './BlackJackImage/table.jpeg',
     type: 'jpeg',
     puppeteerArgs: {
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH? process.env.PUPPETEER_EXECUTABLE_PATH : false,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      //executablePath: process.env.PUPPETEER_EXECUTABLE_PATH? process.env.PUPPETEER_EXECUTABLE_PATH : false,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      headless: true
       
     },
     encoding: 'buffer',
