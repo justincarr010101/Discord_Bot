@@ -3,9 +3,9 @@ const { Client } = require('pg');
 // Open a connection to the SQLite database file
 const db2 = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: false,
-    password: "",
-    user: "postgres"
+    ssl: {
+        rejectUnauthorized: false // Allow self-signed certificates
+    }
 });
 db2.connect();
 console.log('Connected to the database.');

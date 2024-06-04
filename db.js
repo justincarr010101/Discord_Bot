@@ -67,9 +67,9 @@ async function initDatabase() {
     if (!client){
         client = new Client({
             connectionString: process.env.DATABASE_URL,
-            ssl: false,
-            password: '',
-            user: "postgres"
+            ssl: {
+                rejectUnauthorized: false // Allow self-signed certificates
+            }
         });
         await client.connect();
         console.log('Connected to the database.');
