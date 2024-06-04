@@ -29,6 +29,6 @@ async function execute(message, args){
 }
 module.exports = {
     name: 'init',
-    description: 'Check your balance',
+    description: 'initialize the DB to 0',
     execute,
 };
