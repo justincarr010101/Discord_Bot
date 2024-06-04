@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node index.js",
-    "heroku-postbuild": "mkdir -p ./.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64 && cp -R /root/.cache/puppeteer/chrome/linux-125.0.6422.78/chrome-linux64 ./.cache/puppeteer/chrome/linux-125.0.6422.78/ && chmod -R 755 ./.cache/puppeteer"
+    "heroku-postbuild": "mkdir -p /usr/src/app/.cache && cp -R /root/.cache/puppeteer /usr/src/app/.cache/puppeteer/ && chmod -R 755 /usr/src/app/.cache/puppeteer"
   },
   "keywords": [],
   "author": "",
