@@ -12,7 +12,8 @@ RUN npm install --production
 
 # Bundle app source inside Docker image
 COPY . .
-
+# Heroku pupeteer
+RUN npm run heroku-postbuild
 
 # Define environment variable
 ENV NODE_ENV=production
