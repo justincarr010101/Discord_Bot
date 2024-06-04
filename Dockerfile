@@ -1,5 +1,5 @@
 # Use an official Node runtime as a parent image
-FROM node:18.20
+FROM node:18.20-slim
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -17,6 +17,9 @@ RUN npm run heroku-postbuild
 
 # Define environment variable
 ENV NODE_ENV=production
+
+RUN apt-get update && apt-get install -y \
+    libnss3 \
 
 # Run the app when the container launches
 
