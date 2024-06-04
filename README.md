@@ -1,7 +1,3 @@
-<div align="center">
-  <img src="https://github.com/justincarr010101/Discord_Bot/blob/main/Logo/Logo.jpg" alt="Header" width="200" height="200">
-</div>
-
 <h1 align="ceter"> Discord-bot WeebWatcher</h1>
 
 <h3 align="left"> This project was inspired by a desire to learn more JavaScript and in turn learn about Docker, and CI/CD. This bot currently implements custom commands for;<br>
@@ -10,6 +6,7 @@
   - player management<br>
   - Database to keep track of in-guild currencies (sqllite3)<br>
   - Some commands to mess with your friends. <br>
+  - multiplayer blackjack feature that creates custom html images for every new table update.
   - Still in production for more features.<br>
 Learning Outcomes:<br>
   - OOP practice using discord.js (a Node.js module that allows you to interact with the 
