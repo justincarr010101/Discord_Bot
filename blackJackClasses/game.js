@@ -414,14 +414,17 @@ class BlackjackGame {
                 if(player.id !== "dealer"){
                     if (playerValue > 21) {
                         this.results += `HAHA, ${player.id} busted with ${playerValue}. Dealer wins. You lost: ${player.bet}\n`;
+                        player.loseBet();
                     } else if (dealerValue > 21 || playerValue > dealerValue) {
                         this.results += `Congrats, ${player.id} wins with ${playerValue} against dealer's ${dealerValue}. You win: ${player.bet}\n`;
                         player.winBet();
                     } else if (playerValue < dealerValue) {
                         this.results += `Player ${player.id} loses with ${playerValue} against dealer's ${dealerValue}. You lost: ${player.bet}\n`;
+                        player.loseBet();
                     } else if (playerValue == 21 && player.hand.length == 2){
                         player.bet *= 1.25;
                         this.results += `Player ${player.id} BlackJack! You Won: ${player.bet}\n`;
+                        player.winBet();
                     } else {
                         this.results += `Player ${player.id} ties with dealer at ${playerValue}. No loses\n`;
                         player.tieBet();

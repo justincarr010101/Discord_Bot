@@ -83,6 +83,10 @@ class Player {
         this.balance += this.bet;
         this.bet = 0;
     }
+    loseBet() {
+        this.balance -= this.bet;
+        this.bet = 0;
+    }
 }
 
 module.exports = { Player };
