@@ -28,7 +28,8 @@ async function generateImage(_htmlTemplate){
     output: './BlackJackImage/table.jpeg',
     type: 'jpeg',
     puppeteerArgs: {
-      args: ['--no-sandbox'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      
     },
     encoding: 'buffer',
   })
