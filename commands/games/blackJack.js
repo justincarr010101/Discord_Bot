@@ -23,6 +23,7 @@ function execute(message, args){
             args.forEach(arg => {
                 if(game.getPlayer(arg)){
                     game.channel.send(`${arg} is already in the game `);
+                    return;
                 }else{
                     game.addPlayer(message, arg);
                     console.log(game.getIndex(arg));
