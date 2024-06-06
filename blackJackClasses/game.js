@@ -15,6 +15,7 @@ const { executeEmbed,
     updateImageAttachment } = require('../commands/games/embededMessage.js');
 let currentBet = 0;
 let dealerFlipHolder = '';
+let playersWithZeroBalanceCount = 0;
 
 class BlackjackGame {
     constructor(message, endGameCallback) {
@@ -162,29 +163,46 @@ class BlackjackGame {
     async getModalSubmission(Interaction){
         currentBet = 0;
         console.log("here");
-        return new Promise(async (resolve) => {
-            const submitted = await Interaction.awaitModalSubmit({
-                time: 20000,
-            })
+        try{
+            return new Promise(async (resolve) => {
+                const submitted = await Interaction.awaitModalSubmit({
+                    time: 20000,
+                })
 
-            if (submitted) {
-                let player = this.players[this.currentPlayerIndex] 
-                let betAmount = submitted.fields.getTextInputValue('betAmount');
-                await submitted.deferUpdate();
-                currentBet = await this.checkPlayerBet(betAmount, player );
-                player.bet = betAmount;
-                resolve(true);
+                if (submitted) {
+                    let player = this.players[this.currentPlayerIndex] 
+                    let betAmount = submitted.fields.getTextInputValue('betAmount');
+                    await submitted.deferUpdate();
+                    currentBet = await this.checkPlayerBet(betAmount, player );
+                    if (currentBet == 0){
+                        this.addNoBetPlayer(this.currentPlayerIndex);
+                        resolve(true)
+                    } 
+                    player.bet = betAmount;
+                    resolve(true);
+                } else {
+                    this.addNoBetPlayer(this.currentPlayerIndex);
+                }
+            });
+        } catch (error) {
+            if (error.name === 'Error' && error.message.includes('time')) {
+                console.log("Modal submission timed out");
             } else {
-                this.addNoBetPlayer(this.currentPlayerIndex);
+                console.error("An unexpected error occurred:", error);
             }
-        });
+            this.addNoBetPlayer(this.currentPlayerIndex);
+            resolve(false);
+        }
+
     }
 
     async checkPlayerBet(betAmount, player){
         if(player.balance >= betAmount && betAmount > 0){
             player.bet = betAmount;
+            return betAmount
         } else {
             this.addNoBetPlayer(this.currentPlayerIndex);
+            return 0
         }
     }
 
@@ -194,7 +212,7 @@ class BlackjackGame {
             console.log(again);
             if (again != true){
                 //endgame
-                this.endGame();
+                this.endGame("Chose not to play again, Ending Game. Goodbye!");
                 return;
             }
         }
@@ -232,9 +250,21 @@ class BlackjackGame {
             }
         } else {
             //No one started the game so end the game and clear everything
-            message.channel.send("Game Ended due to timeout");
-            this.endGame();
+            //message.channel.send("Game Ended due to timeout");
+            this.endGame("Game Ended due to timeout");
         }
+
+        //check if all players have balance of zero 
+        for (let i = 0; i < this.players.length; i++) {
+            if (this.players[i].balance == 0){
+                playersWithZeroBalanceCount++;
+            }
+        }
+
+        if (playersWithZeroBalanceCount == this.players.length){
+            return this.endGame('Insufficients fund to bet, set balances. Ending Game');
+        }
+        playersWithZeroBalanceCount = 0;
         
         //set each players hand
         for (let i = 0; i < 2; i++) {
@@ -324,6 +354,9 @@ class BlackjackGame {
             this.sittingOut.forEach(integer => { //loop through sitting out and check if it holds the index of the current player.
                 if(integer == this.currentPlayerIndex){ //If it has the player, skip them they dont have a bet
                     this.currentPlayerIndex++;
+                    if (this.currentPlayerIndex >= this.players.length-1) { //check if its currently the dealer first.
+                        
+                    }
                     skipPlayer = true;
                 }
             });
@@ -332,8 +365,10 @@ class BlackjackGame {
         return new Promise(async(resolve) => {
             const player = this.players[this.currentPlayerIndex];
 
-            if (skipPlayer || (player.hand.length == 2 && player.getHandValue() == 21)){
+            if (skipPlayer ){
                 skipPlayer = false;
+                return resolve(true);
+            } else if (player.hand.length == 2 && player.getHandValue() == 21){
                 return resolve(true);
             }
             
@@ -443,11 +478,10 @@ class BlackjackGame {
         });
     }
 
-    async endGame(){
+    async endGame(endString){
 
         this.giveWinnings();
-
-        this.embedInstance.setDescription('Goodbye, Thanks for playing!').setFields();
+        this.embedInstance.setDescription(endString).setFields();
         await this.currentEmbeddedMessage.edit({ embeds: [this.embedInstance] , components : [] });
 
         //check if game is a game
