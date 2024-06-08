@@ -52,7 +52,7 @@ function execute(message, args){
                 game.channel.send(`${arg} has joined the game!`);
             });    
             
-            console.log(game.sittingOut);
+            //console.log(game.sittingOut);
 
             //use the channel to start the game
             game.startGame(message);
