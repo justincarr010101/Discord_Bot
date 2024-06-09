@@ -6,6 +6,8 @@ const db = db2.getDB();
 // const http = require('http');
 const express =  require('express');
 const admins = ["justincarr", "meatbails", "quickphix."];
+const { OpusEncoder } = require('@discordjs/opus');
+const OpusScript = require('opusscript');
 const client = new Client({
      intents: [
         GatewayIntentBits.Guilds,
@@ -21,19 +23,10 @@ client.adminCommands = new Collection();
 const { Player } = require('discord-player');
 
 // this is the entrypoint for discord-player based application
-const player = new Player(client, {
-    deafenOnJoin: true,
-    lagMonitor: 1000,
-    ytdlOptions: {
-        filter: "audioonly",
-        quality: "highestaudio",
-        highWaterMark: 1 << 25
-  }
-
-});
+const player = new Player(client);
 
 // Now, lets load all the default extractors, except 'YouTubeExtractor'. You can remove the filter if you want to include youtube.
-player.extractors.loadDefault();
+player.extractors.loadDefault((ext) => ext !== 'YouTubeExtractor');
 
 // Global error handling
 process.on('uncaughtException', (error) => {
@@ -55,7 +48,7 @@ client.on('error', (error) => {
 });
 
 // Event listener for player errors
-player.events.on('playerError', (queue, error) => {
+client.on('playerError', (queue, error) => {
     // Ensure queue.metadata is defined and has the channel object
     if (queue.metadata && queue.metadata.channel) {
         queue.metadata.channel.send('An error occurred while playing.');
@@ -63,10 +56,12 @@ player.events.on('playerError', (queue, error) => {
     }
     console.error('Player Error:', error.message);
 });
+
 player.events.on('playerStart', (queue, track) => {
     // we will later define queue.metadata object while creating the queue
     queue.channel.send(`Started playing **${track.cleanTitle}**!`);
 });
+
 // Function to recursively read command files from a directory
 const loadCommands = (dir) => {
     const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
