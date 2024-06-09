@@ -23,6 +23,7 @@ function execute(message, args){
             args.forEach(arg => {
                 if(game.getPlayer(arg)){
                     game.channel.send(`${arg} is already in the game `);
+                    return;
                 }else{
                     game.addPlayer(message, arg);
                     console.log(game.getIndex(arg));
@@ -51,7 +52,7 @@ function execute(message, args){
                 game.channel.send(`${arg} has joined the game!`);
             });    
             
-            console.log(game.sittingOut);
+            //console.log(game.sittingOut);
 
             //use the channel to start the game
             game.startGame(message);
