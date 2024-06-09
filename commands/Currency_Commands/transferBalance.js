@@ -1,4 +1,3 @@
-const { ERROR } = require('sqlite3');
 const db2 = require('../../db.js');
 const db = db2.getDB();
 
