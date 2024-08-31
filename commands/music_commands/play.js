@@ -60,6 +60,7 @@ async function execute(message, args) {
             console.error('queue.node is not initialized or does not have a play method');
             return message.channel.send('Error: Unable to play the track.');
         }
+        
     }
 
     // try {

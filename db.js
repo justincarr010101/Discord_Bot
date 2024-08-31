@@ -65,14 +65,30 @@ async function initializeMemberBalance(username, balance) {
 }
 async function initDatabase() {
     if (!client){
-        client = new Client({
-            connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false // Allow self-signed certificates
-            }
-        });
+        if (process.env.NODE_ENV === 'dev' || 'test') {
+            
+            client = new Client({
+                host: process.env.testdbhost,
+                port: process.env.testdbport,
+                user: process.env.testdbuser,
+                password: process.env.testdbpass,
+                ssl: false // No SSL for local/test db
+            
+
+            });
+            
+        } else {
+            client = new Client({
+                connectionString: process.env.DATABASE_URL,
+                ssl: {
+                    rejectUnauthorized: false // Allow self-signed certificates
+                }
+            });
+            
+        }
+
         await client.connect();
-        console.log('Connected to the database.');
+        process.env.NODE_ENV? console.log('Connected to the test/development database.'): console.log('Connected to the production database.');
     }
     try {
         // Create table if it does not exist

@@ -3,7 +3,9 @@ const fs = require('fs');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const db2 = require('./db.js');
 const db = db2.getDB();
-// const http = require('http');
+const {SpotifyExtractor} = require('@discord-player/extractor');
+const { YoutubeiExtractor } = require("discord-player-youtubei");
+
 const express =  require('express');
 const admins = ["justincarr", "meatbails", "quickphix."];
 
@@ -22,120 +24,139 @@ client.adminCommands = new Collection();
 const { Player } = require('discord-player');
 
 // this is the entrypoint for discord-player based application
-const player = new Player(client);
-
-// Now, lets load all the default extractors, except 'YouTubeExtractor'. You can remove the filter if you want to include youtube.
-player.extractors.loadDefault((ext) => ext !== 'YouTubeExtractor');
-
-// Global error handling
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// WebSocket and network error handling
-client.on('sharderror', (error) => {
-    console.error('A WebSocket connection encountered an error:', error);
+const player = new Player(client,{
+    debug:true
 });
 
 
-client.on('error', (error) => {
-    console.error('Client encountered an error:', error);
-});
+async function initializePlayer() {
 
-// Event listener for player errors
-client.on('playerError', (queue, error) => {
-    // Ensure queue.metadata is defined and has the channel object
-    if (queue.metadata && queue.metadata.channel) {
-        queue.metadata.channel.send('An error occurred while playing.');
+    const player = new Player(client, { debug: true });
+
+    await player.extractors.register(YoutubeiExtractor, {
+        authentication: process.env.youtubeAuth, 
+        streamOptions: {
+            useClient: "ANDROID",
+        },
+    });
+
+    await player.extractors.loadDefault((ext) => !['YouTubeExtractor'].includes(ext));
+
+    return player;
+}
+
+initializePlayer().then(player => {
+    // Global error handling
+    process.on('uncaughtException', (error) => {
+        console.error('Uncaught Exception:', error);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+        console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
+    // WebSocket and network error handling
+    client.on('sharderror', (error) => {
+        console.error('A WebSocket connection encountered an error:', error);
+    });
+
+
+    client.on('error', (error) => {
+        console.error('Client encountered an error:', error);
+    });
+
+    // Event listener for player errors
+    client.on('playerError', (queue, error) => {
+        // Ensure queue.metadata is defined and has the channel object
+        if (queue.metadata && queue.metadata.channel) {
+            queue.metadata.channel.send('An error occurred while playing.');
+            console.error('Player Error:', error.message);
+        }
         console.error('Player Error:', error.message);
-    }
-    console.error('Player Error:', error.message);
-});
+    });
 
-player.events.on('playerStart', (queue, track) => {
-    // we will later define queue.metadata object while creating the queue
-    queue.channel.send(`Started playing **${track.cleanTitle}**!`);
-});
+    player.events.on('playerStart', (queue, track) => {
+        // we will later define queue.metadata object while creating the queue
+        queue.channel.send(`Started playing **${track.cleanTitle}**!`);
+    });
 
-// Function to recursively read command files from a directory
-const loadCommands = (dir) => {
-    const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
-    for (const file of commandFiles) {
-        const command = require(`${dir}/${file}`);
-        client.commands.set(command.name, command);
-        console.log(`Loaded command: ${command.name}`);
-    }
-};
+    // Function to recursively read command files from a directory
+    const loadCommands = (dir) => {
+        const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
+        for (const file of commandFiles) {
+            const command = require(`${dir}/${file}`);
+            client.commands.set(command.name, command);
+            console.log(`Loaded command: ${command.name}`);
+        }
+    };
 
-const loadAdminCommands = (dir) => {
-    const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
-    for (const file of commandFiles) {
-        const command = require(`${dir}/${file}`);
+    const loadAdminCommands = (dir) => {
+        const commandFiles = fs.readdirSync(dir).filter(file => file.endsWith('.js'));
+        for (const file of commandFiles) {
+            const command = require(`${dir}/${file}`);
 
-        //client.command.delete
-        client.adminCommands.set(command.name, command);
-        console.log(`Loaded admin command: ${command.name}`);
-    }
-};
+            //client.command.delete
+            client.adminCommands.set(command.name, command);
+            console.log(`Loaded admin command: ${command.name}`);
+        }
+    };
 
-// Load commands from diferent folders
-loadCommands('./commands/Currency_Commands');
-loadCommands('./commands/music_commands');
-loadCommands('./commands/random_Commands');
-loadAdminCommands('./commands/admin_commands');
-loadCommands('./commands/games');
+    // Load commands from diferent folders
+    loadCommands('./commands/Currency_Commands');
+    loadCommands('./commands/music_commands');
+    loadCommands('./commands/random_Commands');
+    loadAdminCommands('./commands/admin_commands');
+    loadCommands('./commands/games');
 
-// Event listener for message creation
-client.on('messageCreate', async message => {
-    if (!message.content.startsWith('.') || message.author.bot) return; // Check if the user is a bot
+    // Event listener for message creation
+    client.on('messageCreate', async message => {
+        if (!message.content.startsWith('.') || message.author.bot) return; // Check if the user is a bot
 
-    const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
-    const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
+        const args = message.content.slice('.'.length).trim().split(/ +/); // Split command into its command
+        const commandName = args.shift().toLowerCase(); // Make it lowercase for easier handling
 
-    let argsUsername = [];
-    const guild = message.guild;
-    var command; 
+        let argsUsername = [];
+        const guild = message.guild;
+        var command; 
 
-    if (client.commands.has(commandName)){
-        command = client.commands.get(commandName);
-    }else if (client.adminCommands.has(commandName)){
-        if (admins.includes(message.author.tag)){
-            command = client.adminCommands.get(commandName);
+        if (client.commands.has(commandName)){
+            command = client.commands.get(commandName);
+        }else if (client.adminCommands.has(commandName)){
+            if (admins.includes(message.author.tag)){
+                command = client.adminCommands.get(commandName);
+            }else{
+                return;
+            }
         }else{
             return;
         }
-    }else{
-        return;
-    }
-    if(commandName == "blackjack"){
-        for (let i = 0; i < args.length; i++){
-            const userId = args[i].replace(/[<@!>]/g, '');
+        if(commandName == "blackjack"){
+            for (let i = 0; i < args.length; i++){
+                const userId = args[i].replace(/[<@!>]/g, '');
+                try {
+                    const member = await guild.members.fetch(userId).then(resp => resp);
+                    argsUsername.push(member.user.username);
+                } catch (error) {
+                    console.error('Error fetching user:', error);
+                    argsUsername.push('Unknown User'); // Handle user not found case
+                    
+                }
+            }
+            command.execute(message, argsUsername);
+        }else{
             try {
-                const member = await guild.members.fetch(userId).then(resp => resp);
-                argsUsername.push(member.user.username);
-            } catch (error) {
-                console.error('Error fetching user:', error);
-                argsUsername.push('Unknown User'); // Handle user not found case
+                console.log("Executing command: " + commandName );
+                command.execute(message, args);
                 
+            } catch (error) {
+                console.error(error);
+                message.reply('there was an error executing that command.');
             }
         }
-        command.execute(message, argsUsername);
-    }else{
-        try {
-            console.log("Executing command: " + commandName );
-            command.execute(message, args);
-            
-        } catch (error) {
-            console.error(error);
-            message.reply('there was an error executing that command.');
-        }
-    }
-   
+    
+    });
 });
+
 
 client.on('guildMemberAdd', member => {
     console.log("guild member joined" + member.user.username );
