@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install any needed packages specified in package.json
-RUN npm install --production
+RUN npm install --omit=dev
 
 
 RUN apt-get update && apt-get install -y \
